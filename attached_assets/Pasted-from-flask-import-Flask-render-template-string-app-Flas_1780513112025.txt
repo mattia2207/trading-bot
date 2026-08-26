@@ -1,0 +1,186 @@
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+# 1. DATI DEL TUO BOT (Simulati - Sostituisci con i tuoi dati reali estratti dall'Exchange)
+mock_trades = [
+    {
+        "pair": "BTC/USDT",
+        "type": "BUY",
+        "entry_price": 65000,
+        "current_price": 65500,
+        "sl": 64000,
+        "tp": 68000,
+        "status": "OPEN",
+        "trigger": "RSI < 30 + Incrocio EMA 20/50",
+        "pnl": 50.0
+    },
+    {
+        "pair": "ETH/USDT",
+        "type": "BUY",
+        "entry_price": 3400,
+        "current_price": 3350,
+        "sl": 3300,
+        "tp": 3600,
+        "status": "CLOSED",
+        "trigger": "Breakout Resistenza 3380",
+        "pnl": -50.0
+    },
+    {
+        "pair": "SOL/USDT",
+        "type": "BUY",
+        "entry_price": 140,
+        "current_price": 155,
+        "sl": 135,
+        "tp": 160,
+        "status": "CLOSED",
+        "trigger": "Volume Spike + Rimbalzo Supporto",
+        "pnl": 150.0
+    }
+]
+
+# 2. LOGICA DI CALCOLO METRICHE PROFITTEVOLE
+def calcola_metriche(trades):
+    trade_chiusi = [t for t in trades if t['status'] == 'CLOSED']
+    totale_trade = len(trade_chiusi)
+    
+    if totale_trade == 0:
+        return {"win_rate": 0, "profit_factor": 0, "total_pnl": 0, "total_trades": 0}
+        
+    vincenti = [t for t in trade_chiusi if t['pnl'] > 0]
+    `perdenti` = [t for t in trade_chiusi if t['pnl'] <= 0]
+    
+    # Calcolo Win Rate
+    win_rate = (len(vincenti) / totale_trade) * 100
+    
+    # Calcolo Profit Factor
+    profitto_lordo = sum([t['pnl'] for t in vincenti])
+    perdita_lorda = abs(sum([t['pnl'] for t in perdenti]))
+    profit_factor = profitto_lordo / perdita_lorda if perdita_lorda > 0 else profitto_lordo
+    
+    # PnL Totale di tutto il bot (aperti + chiusi)
+    total_pnl = sum([t['pnl'] for t in trades])
+    
+    return {
+        "win_rate": round(win_rate, 1),
+        "profit_factor": round(profit_factor, 2),
+        "total_pnl": round(total_pnl, 2),
+        "total_trades": totale_trade
+    }
+
+# 3. INTERFACCIA GRAFICA UNIFICATA (HTML/Tailwind)
+DASHBOARD_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Bot Control Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-6 font-sans">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 border-b border-gray-800 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black text-white tracking-wide">TRADING BOT DASHBOARD</h1>
+                <p class="text-sm text-gray-400">Analisi performance e controllo log strategici</p>
+            </div>
+            <span class="px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-xs font-bold border border-green-500/20 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> BOT LIVE
+            </span>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+            <div class="p-5 bg-gray-900 rounded-xl border border-gray-800 shadow-xl">
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Profitto Totale Netto</p>
+                <p class="text-3xl font-extrabold {% if metriche.total_pnl >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    {{ metriche.total_pnl }}$
+                </p>
+            </div>
+            <div class="p-5 bg-gray-900 rounded-xl border border-gray-800 shadow-xl">
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Profit Factor</p>
+                <p class="text-3xl font-extrabold {% if metriche.profit_factor >= 1.5 %}text-green-400{% elif metriche.profit_factor >= 1.0 %}text-yellow-400{% else %}text-red-500{% endif %}">
+                    {{ metriche.profit_factor }}
+                </p>
+                <p class="text-[10px] text-gray-500 mt-1">Target ideale: > 1.5 (Sotto 1.0 la strategia perde)</p>
+            </div>
+            <div class="p-5 bg-gray-900 rounded-xl border border-gray-800 shadow-xl">
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Win Rate</p>
+                <p class="text-3xl font-extrabold text-blue-400">{{ metriche.win_rate }}%</p>
+                <p class="text-[10px] text-gray-500 mt-1">Basato su {{ metriche.total_trades }} trade completati</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 rounded-xl border border-gray-800 shadow-xl overflow-hidden">
+            <div class="p-4 bg-gray-850 border-b border-gray-800">
+                <h3 class="font-bold text-gray-200">Log Posizioni e Trigger Operativi</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <thead class="bg-gray-950 text-gray-400 uppercase text-xs font-bold tracking-wider">
+                        <tr>
+                            <th class="p-4">Coppia (Stato)</th>
+                            <th class="p-4">Azione / Prezzo</th>
+                            <th class="p-4 text-amber-400">Motivo dell'Ingresso (Trigger Log)</th>
+                            <th class="p-4">Gestione Rischio (SL / TP)</th>
+                            <th class="p-4 text-right">PnL Effettivo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800">
+                        {% for trade in trades %}
+                        <tr class="hover:bg-gray-850/50 transition">
+                            <td class="p-4">
+                                <span class="font-bold block text-white">{{ trade.pair }}</span>
+                                <span class="text-[10px] uppercase {% if trade.status == 'OPEN' %}text-green-400 bg-green-500/10{% else %}text-gray-400 bg-gray-500/10{% endif %} px-1.5 py-0.5 rounded font-mono border border-current/10">
+                                    {{ trade.status }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 text-xs font-bold rounded {% if trade.type == 'BUY' %}bg-green-500/10 text-green-400{% else %}bg-red-500/10 text-red-400{% endif %}">
+                                    {{ trade.type }}
+                                </span>
+                                <span class="font-mono block mt-1 text-xs text-gray-400">${{ trade.entry_price }}</span>
+                            </td>
+                            <td class="p-4 font-medium text-gray-300 italic">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-amber-400">💡</span>
+                                    <span>{{ trade.trigger }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-xs font-mono">
+                                <div class="space-y-0.5">
+                                    <span class="block text-red-400/90">🛑 SL: ${{ trade.sl }}</span>
+                                    <span class="block text-green-400/90">🎯 TP: ${{ trade.tp }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-right font-bold text-base {% if trade.pnl >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                                {{ trade.pnl }}$
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+"""
+
+@app.route('/')
+def dashboard():
+    # Calcola i dati analitici partendo dalla lista dei trade
+    metriche_aggiornate = calcola_metriche(mock_trades)
+    
+    # Genera la pagina HTML inserendo le variabili calcolate
+    return render_template_string(
+        DASHBOARD_TEMPLATE, 
+        trades=mock_trades, 
+        metriche=metriche_aggiornate
+    )
+
+if __name__ == '__main__':
+    # Esegui il server web su Replit
+    app.run(host='0.0.0.0', port=8080)

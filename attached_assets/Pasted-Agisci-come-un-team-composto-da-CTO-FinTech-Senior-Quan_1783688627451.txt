@@ -1,0 +1,406 @@
+Agisci come un team composto da CTO FinTech, Senior Quant Developer, AI Engineer, Data Engineer, UX/UI Designer, DevOps Engineer e Security Engineer.
+
+Il tuo obiettivo NON è riscrivere il progetto, ma analizzare l’intera codebase esistente, preservare tutte le funzionalità funzionanti e trasformare questa applicazione in una piattaforma professionale di Investment Intelligence e Trading Analytics.
+
+Prima di modificare qualsiasi file:
+
+* analizza completamente l’architettura esistente;
+* individua dipendenze e punti critici;
+* evita regressioni;
+* mantieni la piena compatibilità con tutte le funzionalità già presenti;
+* riutilizza il database, gli endpoint API e la logica di scoring esistenti;
+* refattorizza solo quando porta un miglioramento concreto;
+* non eliminare alcuna funzionalità.
+
+⸻
+
+OBIETTIVO
+
+L’app non deve essere solamente un Trading Bot.
+
+Deve diventare una piattaforma AI che aiuti l’utente a:
+
+* trovare opportunità di investimento;
+* analizzare qualsiasi asset finanziario;
+* comprendere il motivo di ogni decisione;
+* monitorare le performance del modello nel tempo;
+* migliorare continuamente grazie ai dati storici.
+
+Il focus deve essere sulla qualità dell’analisi, della spiegazione e dell’esperienza utente.
+
+⸻
+
+CONSOLIDAMENTO DEL PROGETTO
+
+Prima di aggiungere nuove funzionalità:
+
+* elimina codice duplicato;
+* migliora la struttura del progetto;
+* ottimizza query SQL;
+* migliora performance API;
+* migliora caching;
+* migliora gestione errori;
+* migliora logging;
+* migliora tipizzazione;
+* riduci rendering inutili;
+* migliora lazy loading;
+* ottimizza WebSocket;
+* correggi eventuali memory leak;
+* individua automaticamente bug nascosti.
+
+Non modificare la logica dei segnali già validata.
+
+⸻
+
+ANALISI UNIVERSALE
+
+L’utente NON deve conoscere il ticker.
+
+La ricerca deve accettare automaticamente:
+
+* nome azienda
+* ticker
+* ETF
+* indice
+* criptovaluta
+* ISIN (quando disponibile)
+
+Esempi:
+
+Leonardo
+
+Ferrari
+
+Enel
+
+Apple
+
+Microsoft
+
+NVIDIA
+
+Bitcoin
+
+Ethereum
+
+SPY
+
+QQQ
+
+Nasdaq
+
+S&P500
+
+Il sistema deve:
+
+* riconoscere automaticamente il nome;
+* individuare il ticker corretto;
+* mostrare suggerimenti durante la digitazione;
+* gestire eventuali omonimie;
+* eseguire automaticamente l’analisi.
+
+Esempio:
+
+Leonardo → LDO.MI
+
+Ferrari → RACE
+
+Apple → AAPL
+
+Microsoft → MSFT
+
+⸻
+
+GESTIONE DEI PROVIDER DATI
+
+Analizza il provider dati attualmente utilizzato.
+
+Verifica:
+
+* quali mercati supporta;
+* quali asset supporta;
+* eventuali limitazioni;
+* limiti API;
+* qualità dei dati.
+
+Se il provider non supporta determinati asset (ad esempio azioni italiane, europee o ETF specifici), NON limitarti a restituire un errore.
+
+Progetta un’architettura modulare basata su un’interfaccia comune che permetta di utilizzare più provider dati (ad esempio Yahoo Finance, Finnhub, Alpha Vantage, Twelve Data, Polygon, Financial Modeling Prep o altri già disponibili).
+
+Ogni provider deve poter essere sostituito senza modificare il resto del progetto.
+
+Se un dato non è disponibile:
+
+* non simulare risultati;
+* non inventare dati;
+* mostra una spiegazione chiara;
+* indica il motivo;
+* segnala se il problema dipende dal provider.
+
+⸻
+
+AI EXPLAINABILITY
+
+Ogni analisi deve avere una pagina dedicata.
+
+Mostrare:
+
+* AI Score
+* Confidence
+* Trend Score
+* Momentum Score
+* Risk Score
+* Quality Tier
+* Market Regime
+* Confluence
+* probabilità stimata
+
+Mostrare chiaramente:
+
+quali fattori hanno contribuito.
+
+Esempio:
+
+✅ EMA200
+
+✅ MACD
+
+✅ Momentum
+
+❌ Volume
+
+❌ Multi Timeframe
+
+✅ Structure
+
+Per ogni fattore mostrare il peso nel punteggio.
+
+L’AI deve spiegare:
+
+* perché è stato generato il segnale;
+* quali elementi hanno aumentato la confidence;
+* quali l’hanno ridotta;
+* principali rischi;
+* scenario ottimistico;
+* scenario pessimistico;
+* motivazione finale in linguaggio naturale.
+
+⸻
+
+ANALYTICS PROFESSIONALI
+
+Utilizzando il database esistente creare una dashboard Analytics professionale.
+
+Implementare grafici interattivi per:
+
+* Equity Curve
+* Profit Curve
+* ROI cumulativo
+* Drawdown
+* Rolling Win Rate
+* Rolling Profit Factor
+* Rolling ROI
+* Distribuzione Score
+* Distribuzione Confidence
+* Distribuzione Confluence
+* Distribuzione Market Regime
+* Distribuzione Quality Tier
+* Performance per ticker
+* Performance per settore
+* Performance BUY vs WAIT
+* Heatmap giorni migliori
+* Heatmap ore migliori
+* Scatter Score vs Profit
+* Scatter Confidence vs Profit
+* Scatter Confluence vs Profit
+
+Aggiornamento automatico dal database.
+
+⸻
+
+TRADE JOURNAL
+
+Ogni trade deve avere una pagina dedicata.
+
+Visualizzare:
+
+* analisi completa;
+* indicatori utilizzati;
+* market regime;
+* motivazione AI;
+* risultato;
+* profit/loss;
+* cosa ha funzionato;
+* cosa migliorare;
+* suggerimenti automatici.
+
+⸻
+
+MARKET INTELLIGENCE
+
+Creare una nuova sezione.
+
+L’AI deve individuare automaticamente:
+
+* settori più forti;
+* settori più deboli;
+* rotazione settoriale;
+* opportunità emergenti;
+* watchlist AI;
+* trend emergenti.
+
+Supportare, quando i dati sono disponibili:
+
+* azioni USA;
+* azioni Europa;
+* azioni Italia;
+* ETF;
+* indici;
+* materie prime;
+* forex;
+* criptovalute.
+
+⸻
+
+RICERCA AI
+
+Implementare una ricerca in linguaggio naturale.
+
+L’utente deve poter chiedere:
+
+* aziende favorite dall’aumento della spesa militare;
+* aziende leader nell’intelligenza artificiale;
+* società favorite dal taglio dei tassi;
+* aziende sottovalutate;
+* migliori aziende del settore energia;
+* aziende con forte momentum;
+* società con crescita degli utili.
+
+L’AI deve comprendere il contesto e costruire automaticamente una risposta motivata.
+
+⸻
+
+SCANNER PROFESSIONALE
+
+Potenziare lo scanner con filtri avanzati:
+
+* score;
+* confidence;
+* confluence;
+* qualità;
+* volume;
+* volatilità;
+* trend;
+* settore;
+* market cap;
+* market regime.
+
+Ordinamento completamente personalizzabile.
+
+⸻
+
+PORTFOLIO ANALYTICS
+
+Aggiungere una sezione Portfolio.
+
+Visualizzare:
+
+* allocazione;
+* esposizione;
+* rischio;
+* correlazione;
+* rendimento;
+* timeline;
+* performance.
+
+⸻
+
+UX
+
+Migliorare l’esperienza utente.
+
+Implementare:
+
+* ricerca istantanea;
+* autocomplete;
+* cronologia ricerche;
+* preferiti;
+* watchlist;
+* ticker recenti;
+* dashboard più leggibile;
+* feedback chiari in caso di errore.
+
+⸻
+
+CONTROLLO QUALITÀ
+
+Prima di terminare:
+
+* verificare che ogni pulsante funzioni;
+* verificare che tutte le pagine siano raggiungibili;
+* verificare che tutte le API rispondano correttamente;
+* verificare che il database venga aggiornato senza errori;
+* verificare che non vi siano errori JavaScript;
+* verificare che il frontend sia coerente su desktop e mobile.
+
+Testare almeno:
+
+Italia
+
+* Leonardo
+* Ferrari
+* Enel
+* Eni
+* Stellantis
+* Intesa Sanpaolo
+
+Europa
+
+* ASML
+* SAP
+* Siemens
+* Airbus
+
+USA
+
+* Apple
+* Microsoft
+* NVIDIA
+* Amazon
+* Alphabet
+* Tesla
+
+ETF
+
+* SPY
+* QQQ
+* VOO
+* VWCE
+
+Crypto
+
+* Bitcoin
+* Ethereum
+* Solana
+
+Se un asset non può essere analizzato a causa dei limiti del provider dati, mostra un messaggio esplicativo e prepara l’architettura per l’integrazione di provider aggiuntivi, senza simulare dati o risultati.
+
+⸻
+
+REGOLE FONDAMENTALI
+
+* Non eliminare funzionalità esistenti.
+* Non rompere il frontend.
+* Non modificare la logica di scoring senza una motivazione tecnica.
+* Non creare dati fittizi.
+* Riutilizzare il database esistente.
+* Ogni nuova funzione deve essere modulare, testabile ed estendibile.
+* Mantenere uno stile grafico coerente con quello già presente.
+* Privilegiare qualità, affidabilità, trasparenza e manutenibilità rispetto all’aggiunta di molte funzionalità.
+
+Al termine, ￼ genera un report finale con:
+
+1. le modifiche effettuate;
+2. le ottimizzazioni realizzate;
+3. gli eventuali limiti rimasti (ad esempio dovuti ai provider dati);
+4. le proposte per una futura versione 2.0, senza implementarle automaticamente.

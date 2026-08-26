@@ -1,0 +1,535 @@
+PROMPT DEFINITIVO PER REPLIT AGENT
+
+Agisci come un team composto da CTO FinTech, Senior Quant Developer, AI Engineer, UX Designer, Data Engineer, DevOps Engineer e Security Engineer.
+
+Il tuo obiettivo NON è ricostruire il progetto da zero, ma analizzare l’intera codebase esistente, preservare tutte le funzionalità funzionanti e trasformarla in una piattaforma professionale di Investment Intelligence e Trading AI.
+
+Prima di modificare qualsiasi file:
+
+* analizza completamente l’architettura esistente;
+* individua dipendenze e punti critici;
+* evita regressioni;
+* mantieni la compatibilità con le funzionalità attuali;
+* refattorizza solo quando porta un reale miglioramento.
+
+⸻
+
+OBIETTIVO
+
+Trasformare questa applicazione in una piattaforma AI capace di:
+
+* analizzare migliaia di asset finanziari;
+* individuare automaticamente opportunità di investimento;
+* spiegare ogni analisi con linguaggio naturale;
+* integrare analisi tecnica, fondamentale, macroeconomica e sentiment;
+* supportare il trading discrezionale e quello automatico;
+* essere scalabile, modulare e pronta per utenti reali.
+
+L’app NON deve limitarsi a generare segnali BUY/SELL, ma diventare un assistente intelligente per investitori.
+
+⸻
+
+ARCHITETTURA
+
+Riorganizza il codice in moduli indipendenti:
+
+* frontend
+* backend
+* api
+* services
+* ai
+* market-intelligence
+* indicators
+* strategies
+* scanners
+* exchanges
+* portfolio
+* risk
+* websocket
+* alerts
+* news
+* database
+* analytics
+* backtesting
+* reporting
+* authentication
+* utils
+* types
+
+Ogni modulo deve essere indipendente, testabile e facilmente estendibile.
+
+Nessun file deve superare circa 300 righe.
+
+⸻
+
+MARKET INTELLIGENCE
+
+Aggiungi una sezione completamente nuova.
+
+L’utente deve poter chiedere:
+
+* Quali sono i settori più forti?
+* Quali sono i migliori titoli oggi?
+* Quali aziende beneficiano dell’aumento della spesa militare?
+* Quali aziende cresceranno grazie all’intelligenza artificiale?
+* Quali società sono favorite dal taglio dei tassi?
+* Quali aziende sono sottovalutate?
+* Quali hanno il miglior momentum?
+
+L’AI deve costruire automaticamente la risposta.
+
+⸻
+
+UNIVERSO INVESTIBILE
+
+Supporta:
+
+* azioni USA
+* azioni Europa
+* ETF
+* indici
+* materie prime
+* forex
+* criptovalute
+* obbligazioni (se disponibili)
+* REIT (se disponibili)
+
+L’app deve essere universale.
+
+⸻
+
+AI MULTI AGENTE
+
+Implementa agenti specializzati:
+
+Technical Analyst
+
+Fundamental Analyst
+
+Macro Analyst
+
+Sentiment Analyst
+
+News Analyst
+
+Sector Analyst
+
+Risk Analyst
+
+Portfolio Analyst
+
+Options Analyst (se disponibili i dati)
+
+On-chain Analyst (crypto)
+
+Whale Activity Analyst
+
+Un Meta Agent combina tutti i risultati.
+
+⸻
+
+AI SCORE
+
+Ogni asset deve ricevere:
+
+AI Score (0-100)
+
+Trend Score
+
+Risk Score
+
+Momentum Score
+
+Value Score
+
+Growth Score
+
+Volatility Score
+
+Confidence Score
+
+Ogni punteggio deve essere spiegato.
+
+⸻
+
+ANALISI DEI SETTORI
+
+Crea una dashboard dedicata.
+
+Per ogni settore mostra:
+
+trend
+
+rotazione settoriale
+
+flussi di capitale
+
+performance
+
+volatilità
+
+notizie principali
+
+rischi
+
+opportunità
+
+⸻
+
+SCREENER
+
+Costruisci uno screener professionale.
+
+Filtri:
+
+Market Cap
+
+Volume
+
+Volatilità
+
+RSI
+
+MACD
+
+EMA
+
+Momentum
+
+Crescita utili
+
+Debito
+
+Margini
+
+P/E
+
+PEG
+
+Dividend Yield
+
+ROE
+
+ROIC
+
+Free Cash Flow
+
+Insider Buying
+
+Short Interest
+
+⸻
+
+ANALISI FONDAMENTALE
+
+Per ogni azienda mostra:
+
+ricavi
+
+utili
+
+EPS
+
+margini
+
+cash flow
+
+debito
+
+crescita
+
+fair value
+
+DCF semplificato
+
+confronto con concorrenti
+
+vantaggi competitivi
+
+⸻
+
+NEWS AI
+
+Integra notizie finanziarie.
+
+L’AI deve:
+
+riassumerle
+
+classificarle
+
+stimarne l’impatto
+
+associare le notizie ai titoli
+
+calcolare un News Impact Score
+
+⸻
+
+SENTIMENT
+
+Analizza:
+
+social
+
+news
+
+analyst rating
+
+insider
+
+istituzionali
+
+Costruisci un Sentiment Score.
+
+⸻
+
+TRADING
+
+Mantieni e migliora tutto.
+
+Aggiungi:
+
+Position Sizing
+
+Kelly Criterion
+
+Trailing Stop
+
+Break Even
+
+Partial Take Profit
+
+Scaling
+
+Dynamic Stop
+
+Max Daily Loss
+
+Max Weekly Loss
+
+Max Exposure
+
+Portfolio Exposure
+
+Correlation Risk
+
+⸻
+
+BACKTEST
+
+Implementa un motore professionale.
+
+Con:
+
+slippage
+
+commissioni
+
+spread
+
+latency
+
+walk-forward
+
+Monte Carlo
+
+Sharpe
+
+Sortino
+
+Profit Factor
+
+Calmar
+
+Drawdown
+
+Equity Curve
+
+Benchmark
+
+⸻
+
+PORTAFOGLIO
+
+Crea una sezione Portfolio.
+
+Mostra:
+
+allocazione
+
+performance
+
+correlazione
+
+rischio
+
+esposizione
+
+rendimenti
+
+heatmap
+
+timeline
+
+⸻
+
+DASHBOARD
+
+Rendi la UI moderna.
+
+Aggiungi:
+
+Watchlist
+
+Market Heatmap
+
+Sector Heatmap
+
+Economic Calendar
+
+Top Movers
+
+Trending Stocks
+
+AI Ideas
+
+Scanner
+
+Portfolio
+
+Alerts
+
+Journal
+
+Research
+
+⸻
+
+RICERCA NATURALE
+
+Permetti domande come:
+
+“Trova aziende favorite dall’aumento della spesa militare”
+
+“Trova le migliori società AI”
+
+“Quali aziende beneficiano dell’aumento del prezzo del petrolio?”
+
+“Quali aziende europee hanno forte crescita e valutazioni interessanti?”
+
+L’AI deve comprendere il significato della richiesta.
+
+⸻
+
+SPIEGAZIONE AI
+
+Ogni suggerimento deve spiegare:
+
+perché
+
+quali dati sono stati usati
+
+livello di fiducia
+
+rischi
+
+fattori contrari
+
+scenario ottimistico
+
+scenario pessimistico
+
+⸻
+
+PERFORMANCE
+
+Ottimizza:
+
+WebSocket
+
+Cache
+
+Lazy Loading
+
+Query
+
+Rendering
+
+API
+
+Error Handling
+
+Retry
+
+Logging
+
+⸻
+
+SICUREZZA
+
+Implementa:
+
+JWT
+
+Rate Limiting
+
+Secret Manager
+
+Encrypted Keys
+
+Audit Log
+
+RBAC
+
+Validazione Input
+
+Protezione XSS
+
+Protezione CSRF
+
+Protezione SQL Injection
+
+⸻
+
+DATABASE
+
+Ottimizza schema e relazioni.
+
+Implementa migrazioni.
+
+⸻
+
+TEST
+
+Copertura >90%.
+
+⸻
+
+DOCUMENTAZIONE
+
+Genera:
+
+documentazione tecnica
+
+diagrammi architetturali
+
+roadmap
+
+changelog
+
+commenti essenziali
+
+⸻
+
+REGOLE FONDAMENTALI
+
+* Non eliminare funzionalità esistenti.
+* Non rompere l’interfaccia utente.
+* Ogni modifica deve essere retrocompatibile.
+* Ogni nuova funzione deve essere modulare.
+* Evita codice duplicato.
+* Mantieni il codice leggibile.
+* Ottimizza senza introdurre complessità inutile.
+* Ogni componente deve poter essere esteso in futuro.
+* Se una funzionalità richiede dati premium o non disponibili, implementa un’interfaccia e segnala chiaramente il limite invece di simulare dati.

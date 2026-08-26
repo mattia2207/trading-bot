@@ -1,0 +1,164 @@
+PROMPT 2 — AI EXPLAINABILITY + ANALYTICS (DA FARE DOPO)
+
+Agisci come Quant Developer e Data Scientist.
+
+L’obiettivo è trasformare il database dei segnali in uno strumento di analisi professionale.
+
+AI Explainability
+
+Per ogni segnale creare una pagina dedicata.
+
+Visualizzare:
+
+* Score
+* Confidence
+* Confluence
+* Market Regime
+* Entry
+* TP
+* SL
+* Probabilità stimata
+
+Mostrare quali fattori hanno contribuito.
+
+Esempio:
+
+✅ Trend EMA200
+
+✅ MACD
+
+❌ Volume
+
+✅ Momentum
+
+❌ Multi Timeframe
+
+✅ Structure
+
+Mostrare il peso di ogni fattore.
+
+L’AI deve spiegare:
+
+* perché è entrato;
+* quali fattori erano favorevoli;
+* quali fattori erano contrari;
+* rischi;
+* scenari alternativi.
+
+Analytics
+
+Creare dashboard professionali.
+
+Implementare grafici per:
+
+* Equity Curve
+* Profit Curve
+* ROI
+* Drawdown
+* Rolling Win Rate
+* Rolling Profit Factor
+* Rolling ROI
+* Distribuzione Score
+* Distribuzione Confidence
+* Distribuzione Confluence
+* Distribuzione Regimi
+* Distribuzione Quality Tier
+* Performance per ticker
+* Performance per settore
+* Performance BUY vs WAIT
+* Heatmap giorni
+* Heatmap orari
+* Scatter Score vs Profit
+* Scatter Confidence vs Profit
+* Scatter Confluence vs Profit
+
+Aggiornare tutto automaticamente dal database.
+
+Journal
+
+Ogni trade deve avere:
+
+* analisi completa
+* indicatori attivi
+* motivazione AI
+* risultato
+* cosa ha funzionato
+* cosa migliorare
+
+⸻
+
+PROMPT 3 — MARKET INTELLIGENCE (FASE FINALE)
+
+Agisci come Quant Researcher, AI Engineer e Portfolio Manager.
+
+Trasforma la piattaforma da Trading Dashboard a Investment Intelligence Platform.
+
+Market Intelligence
+
+Creare una nuova sezione.
+
+L’AI deve individuare automaticamente:
+
+* settori forti
+* settori deboli
+* rotazione settoriale
+* opportunità
+* watchlist AI
+* trend emergenti
+
+Supportare:
+
+* Azioni USA
+* Azioni Europa
+* ETF
+* Indici
+* Materie Prime
+* Forex
+* Crypto
+
+Ricerca AI
+
+Implementare ricerca in linguaggio naturale.
+
+L’utente deve poter scrivere:
+
+* aziende favorite dalla spesa militare
+* aziende AI
+* aziende favorite dal taglio dei tassi
+* società sottovalutate
+* aziende con forte momentum
+
+L’AI deve comprendere il contesto e motivare ogni risposta.
+
+Scanner Professionale
+
+Potenziare lo scanner con filtri:
+
+* score
+* confidence
+* confluence
+* volume
+* volatilità
+* trend
+* settore
+* market cap
+* regime
+
+Portfolio
+
+Aggiungere:
+
+* allocazione
+* esposizione
+* correlazione
+* rischio
+* rendimento
+* timeline
+
+Regole
+
+* Nessuna modifica al sistema di segnali.
+* Nessuna regressione.
+* Utilizzare il database già esistente.
+* Tutte le nuove funzionalità devono essere modulari e spiegabili.
+* Se alcuni dati (ad esempio fondamentali, notizie o dati macro) non sono disponibili con le API attuali, predisporre l’architettura e indicare chiaramente quali integrazioni saranno necessarie, senza simulare dati.

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trading Advisor Terminal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #c9d1d9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background-color: #111827;
+            border-bottom: 1px solid #1f2937;
+        }
+        .card-custom {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .table-custom {
+            color: #c9d1d9;
+        }
+        .table-custom th {
+            border-bottom: 2px solid #374151;
+            color: #9ca3af;
+        }
+        .table-custom td {
+            border-bottom: 1px solid #374151;
+            vertical-align: middle;
+        }
+        .btn-success-custom {
+            background-color: #059669;
+            border: none;
+        }
+        .btn-success-custom:hover {
+            background-color: #047857;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark navbar-custom mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">📊 Advisor Bot Terminal</span>
+            <span class="badge bg-success">Live Syncing</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category if category != 'danger' else 'danger' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card card-custom p-4 mb-4">
+                    <h5 class="text-muted text-uppercase small font-weight-bold">Conto Virtuale</h5>
+                    <h2 class="text-white font-weight-bold">{{ data.balance }} €</h2>
+                    <p class="text-success small mb-0">● Sistema di trading attivo in background</p>
+                </div>
+
+                <div class="card card-custom p-4">
+                    <h5 class="text-white mb-3">Apri Monitoraggio Ticker</h5>
+                    <form action="/add_trade" methods="POST">
+                        <div class="mb-3">
+                            <label for="ticker" class="form-label text-muted small">Simbolo di Mercato (Es: BTC/USD, ETH/USD)</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="ticker" name="ticker" placeholder="BTC/USD" required>
+                        </div>
+                        <button type="submit" class="btn btn-success-custom w-100 text-white font-weight-bold">Analizza & Traccia</button>
+                    </form>
+                    <div class="mt-3 text-muted" style="font-size: 11px;">
+                        *Il sistema interrogherà le API di Twelve Data. Se il punteggio algoritmico basato su EMA200 e RSI sarà superiore a 60, il trade entrerà in automatico nel tabellone.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card card-custom p-4">
+                    <h5 class="text-white mb-4">📈 Asset Attualmente Sotto Monitoraggio</h5>
+                    
+                    {% if data.trades %}
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Prezzo Ingresso</th>
+                                    <th>Take Profit (TP)</th>
+                                    <th>Stop Loss (SL)</th>
+                                    <th class="text-end">Azione</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in data.trades %}
+                                <tr>
+                                    <td class="fw-bold text-info">{{ t.ticker }}</td>
+                                    <td>{{ t.entry }}</td>
+                                    <td class="text-success">{{ t.tp }}</td>
+                                    <td class="text-danger">{{ t.sl }}</td>
+                                    <td class="text-end">
+                                        <a href="/delete_trade/{{ t.ticker }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Vuoi davvero interrompere il tracciamento di {{ t.ticker }}?');">Interrompi</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <p class="mb-0">Nessuna operazione attiva nel mercato.</p>
+                        <small>Aggiungi un ticker usando il modulo a sinistra o tramite il comando <code>/track</code> su Telegram.</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

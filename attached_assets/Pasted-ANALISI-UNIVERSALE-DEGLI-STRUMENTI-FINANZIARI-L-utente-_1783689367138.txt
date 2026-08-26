@@ -1,0 +1,97 @@
+ANALISI UNIVERSALE DEGLI STRUMENTI FINANZIARI
+
+L’utente non deve essere obbligato a conoscere ticker, codici identificativi o il mercato di quotazione.
+
+Implementa un sistema di Asset Resolution intelligente che permetta di ricercare e analizzare qualsiasi strumento finanziario utilizzando il linguaggio naturale.
+
+La ricerca deve accettare automaticamente:
+
+* nome completo dell’azienda;
+* nome commerciale;
+* ticker;
+* ETF;
+* indice;
+* criptovaluta;
+* ISIN (quando disponibile).
+
+Il sistema deve:
+
+* riconoscere automaticamente l’asset richiesto;
+* identificare il mercato corretto;
+* recuperare il ticker appropriato;
+* proporre suggerimenti durante la digitazione;
+* gestire omonimie e strumenti con nomi simili;
+* permettere all’utente di scegliere tra più risultati quando necessario;
+* memorizzare le associazioni più utilizzate per velocizzare le ricerche future.
+
+L’utente deve poter cercare liberamente qualsiasi società, ETF, indice o criptovaluta senza conoscere il relativo ticker.
+
+La ricerca deve essere indipendente dalla sorgente dati utilizzata.
+
+⸻
+
+ASTRAZIONE DELLE FONTI DATI
+
+Analizza il sistema attuale di acquisizione dei dati e separa completamente la logica di analisi dalla logica di recupero dei dati.
+
+Implementa un livello di astrazione che consenta di utilizzare diversi provider dati senza modificare il resto dell’applicazione.
+
+Per ogni ricerca:
+
+* seleziona automaticamente il provider più adatto tra quelli disponibili;
+* gestisci eventuali limitazioni del provider;
+* utilizza provider alternativi se necessario;
+* non restituire errori generici quando un asset non è disponibile.
+
+Se nessun provider supporta uno strumento richiesto:
+
+* spiega chiaramente il motivo;
+* indica quale limitazione impedisce l’analisi;
+* mantieni il sistema predisposto per integrare facilmente nuovi provider in futuro.
+
+Non simulare dati e non inventare risultati.
+
+⸻
+
+WATCHLIST DINAMICA
+
+Migliora completamente la gestione dei titoli monitorati.
+
+L’utente deve poter:
+
+* aggiungere strumenti;
+* eliminare strumenti;
+* modificare strumenti;
+* sospendere temporaneamente un’analisi;
+* riattivarla;
+* riordinare la lista;
+* creare watchlist multiple;
+* importare ed esportare watchlist.
+
+L’eliminazione di uno strumento dalla watchlist non deve eliminare lo storico delle analisi già effettuate.
+
+⸻
+
+ESPERIENZA UTENTE
+
+La ricerca deve essere semplice e naturale.
+
+Durante la digitazione:
+
+* mostra suggerimenti in tempo reale;
+* evidenzia il mercato di appartenenza;
+* visualizza ticker e nome completo;
+* mostra eventuali strumenti simili.
+
+L’obiettivo è permettere a qualsiasi utente di trovare rapidamente qualsiasi strumento finanziario senza conoscere informazioni tecniche.
+
+⸻
+
+VALIDAZIONE FINALE
+
+Prima di completare l’implementazione:
+
+* verifica che il sistema sia in grado di ricercare strumenti appartenenti a mercati differenti;
+* verifica il corretto funzionamento della ricerca per azioni, ETF, indici e criptovalute;
+* verifica che ogni strumento possa essere aggiunto o rimosso dalla watchlist senza errori;
+* verifica che eventuali limitazioni dei provider vengano gestite con messaggi chiari e informativi, senza interrompere l’esperienza utente.

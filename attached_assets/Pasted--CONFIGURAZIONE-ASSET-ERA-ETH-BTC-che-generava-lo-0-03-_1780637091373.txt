@@ -1,0 +1,64 @@
+# --- CONFIGURAZIONE ASSET ---
+# ERA: 'ETH/BTC' (che generava lo 0.03). 
+# ORA: Impostato sul mercato in Dollari/Tether per avere i prezzi reali (es. 2800.00)
+symbol = 'ETH/USDT'  
+
+# --- DATI DI SIMULAZIONE (Sostituisci con le chiamate alle tue API/Librerie) ---
+# Esempio di valori coerenti per ETH/USDT in questo momento
+prezzo_ingresso = 3150.00  # Valore nominale corretto in USD
+valore_rsi = 61.5          # Il tuo dato di partenza
+valore_atr = 45.50         # Volatilità reale in dollari (non 0.0002)
+prezzo_ema200 = 3155.00    # Prezzo leggermente sotto la EMA200 per confermare il trend
+
+print(f"--- ANALISI DI MERCATO PER {symbol} ---")
+print(f"Prezzo Attuale: {prezzo_ingresso} USD | EMA200: {prezzo_ema200} USD")
+
+# --- 1. LOGICA TREND (EMA 200) ---
+if prezzo_ingresso < prezzo_ema200:
+    trend = "Ribassista"
+    print(f"Trend: {trend} (Prezzo sotto EMA200).")
+else:
+    trend = "Rialzista"
+    print(f"Trend: {trend} (Prezzo sopra EMA200).")
+
+
+# --- 2. CORREZIONE LOGICA RSI ---
+# L'RSI a 61.5 indica momentum positivo/neutro, non ipervenduto o momentum negativo.
+if valore_rsi >= 70:
+    stato_rsi = "Ipercomprato (Possibile inversione SHORT)"
+elif valore_rsi <= 30:
+    stato_rsi = "Ipervenduto (Possibile inversione LONG)"
+elif valore_rsi > 50:
+    stato_rsi = "Momentum Rialzista (Fase Neutro-Rialzista)"
+else:
+    stato_rsi = "Momentum Ribassista (Fase Neutro-Ribassista)"
+
+print(f"RSI: {valore_rsi} -> {stato_rsi}")
+
+
+# --- 3. VALUTAZIONE OPERATIVA ---
+# Un RSI a 61.5 contrasta con uno short immediato, ma se il tuo piano 
+# prevede comunque l'ingresso short sotto la EMA200, ecco il calcolo corretto:
+print("\n--- PARAMETRI DI ORDINE CORRETTI ---")
+
+if trend == "Ribassista":
+    print("Segnale: Predisposizione per operazione SHORT.")
+    print(f"Volatilità (ATR): {valore_atr} USD (Adeguata per il mercato attuale)")
+    
+    # --- 4. CALCOLO DINAMICO TP E SL (Metodo ATR) ---
+    # Per uno Short: lo Stop Loss sta SOPRA il prezzo, il Take Profit sta SOTTO.
+    # Moltiplichiamo l'ATR per dare respiro all'operazione (es. 1.5x per SL, 3x per TP)
+    stop_loss = prezzo_ingresso + (valore_atr * 1.5)
+    take_profit = prezzo_ingresso - (valore_atr * 3.0)
+    
+    # Calcolo delle percentuali reali per il log
+    pct_sl = ((stop_loss - prezzo_ingresso) / prezzo_ingresso) * 100
+    pct_tp = ((prezzo_ingresso - take_profit) / prezzo_ingresso) * 100
+
+    print(f"-> INGRESSO SHORT a: {prezzo_ingresso} USD")
+    print(f"-> TARGET TAKE PROFIT (TP) a: {take_profit:.2f} USD (-{pct_tp:.1f}%)")
+    print(f"-> STOP LOSS (SL) a: {stop_loss:.2f} USD (+{pct_sl:.1f}%)")
+    print(f"-> Rapporto Rischio/Rendimento (R:R): 1:{3.0 / 1.5}")
+
+else:
+    print("Segnale: Nessuna operazione short. Il trend o i filtri non sono allineati.")

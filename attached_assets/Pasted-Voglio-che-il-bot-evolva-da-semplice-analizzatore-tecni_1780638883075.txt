@@ -1,0 +1,300 @@
+Voglio che il bot evolva da semplice analizzatore tecnico a sistema quantitativo che misura l’efficacia reale dei propri segnali.
+
+==================================================
+FASE 1 - REGISTRAZIONE DI OGNI SEGNALE
+
+Ogni volta che il bot genera un’analisi deve salvare in database:
+
+Timestamp
+Asset
+Timeframe
+
+Prezzo di ingresso
+
+Direzione:
+
+* BUY
+* SELL
+
+Take Profit
+Stop Loss
+
+Score totale
+
+Confidence Score
+
+Probabilità stimata
+
+Valori indicatori:
+
+RSI
+MACD
+EMA50
+EMA100
+EMA200
+ATR
+Volume
+Trend
+Momentum
+Volatilità
+Confluenza
+
+Market Regime:
+
+* Trend Forte
+* Trend Debole
+* Laterale
+* Alta Volatilità
+* Bassa Volatilità
+
+Stato iniziale:
+
+PENDING
+
+==================================================
+FASE 2 - MONITORAGGIO AUTOMATICO
+
+Il sistema deve controllare periodicamente l’evoluzione del trade.
+
+Determinare se viene colpito:
+
+TP
+SL
+
+oppure
+
+NESSUN RISULTATO
+
+Aggiornare automaticamente il record.
+
+Possibili stati:
+
+WIN
+LOSS
+EXPIRED
+
+Salvare:
+
+Profitto %
+Perdita %
+Durata del trade
+Massimo profitto raggiunto
+Massimo drawdown raggiunto
+
+==================================================
+FASE 3 - STATISTICHE GLOBALI
+
+Creare dashboard con:
+
+Totale segnali
+
+Trade vinti
+
+Trade persi
+
+Win Rate %
+
+Profit Factor
+
+Expectancy
+
+Average Return
+
+Average Drawdown
+
+Risk Reward medio
+
+ROI teorico
+
+Max Drawdown storico
+
+==================================================
+FASE 4 - ANALISI PER SCORE
+
+Suddividere i risultati per fasce:
+
+Score 90-100
+
+Score 80-89
+
+Score 70-79
+
+Score 60-69
+
+Score <60
+
+Per ogni fascia mostrare:
+
+Numero trade
+
+Win Rate
+
+Profitto medio
+
+Drawdown medio
+
+Profit Factor
+
+Obiettivo:
+
+Capire quali score generano segnali realmente profittevoli.
+
+==================================================
+FASE 5 - ANALISI PER CONFIDENCE
+
+Raggruppare:
+
+Confidence >80
+
+Confidence 70-80
+
+Confidence 60-70
+
+Confidence 50-60
+
+Confidence <50
+
+Calcolare:
+
+Win Rate
+
+Profit Factor
+
+Expectancy
+
+==================================================
+FASE 6 - ANALISI DELLE CONFLUENZE
+
+Salvare numero confluenze.
+
+Esempio:
+
+Trend
+Momentum
+Volumi
+Struttura
+Multi-Timeframe
+Volatilità
+
+Calcolare:
+
+Confluenza 6/6
+
+Confluenza 5/6
+
+Confluenza 4/6
+
+Confluenza 3/6
+
+e relativo Win Rate.
+
+==================================================
+FASE 7 - ANALISI DEL REGIME DI MERCATO
+
+Calcolare statistiche separate per:
+
+Trend Forte
+Trend Debole
+Laterale
+Alta Volatilità
+Bassa Volatilità
+
+Obiettivo:
+
+Capire in quali condizioni il sistema performa meglio.
+
+==================================================
+FASE 8 - AUTO APPRENDIMENTO STATISTICO
+
+Quando il database contiene almeno 100 trade chiusi:
+
+Mostrare:
+
+Win Rate storico setup simili
+
+Esempio:
+
+“Setup simili:
+78 casi storici
+
+Win Rate:
+67%
+
+Profit Factor:
+1.82”
+
+Questa statistica deve essere mostrata all’interno di ogni nuova analisi.
+
+==================================================
+FASE 9 - FILTRO QUALITÀ
+
+Aggiungere impostazioni configurabili:
+
+Score minimo
+
+Confidence minima
+
+Confluenza minima
+
+Esempio:
+
+Score >= 70
+
+Confidence >= 60
+
+Confluenza >= 4
+
+I trade che non rispettano i requisiti devono essere classificati:
+
+“Segnale non qualificato”
+
+e non generare alert.
+
+==================================================
+FASE 10 - ALERT TELEGRAM INTELLIGENTI
+
+Inviare notifiche solo per segnali qualificati.
+
+Livelli:
+
+ELITE
+
+Score >= 85
+Confidence >= 70
+Confluenza >= 5
+
+FORTE
+
+Score >= 75
+Confidence >= 65
+
+NORMALE
+
+Score >= 70
+Confidence >= 60
+
+Messaggio Telegram:
+
+Asset
+Direzione
+Score
+Confidence
+Probabilità stimata
+Confluenza
+Win Rate storico setup simili
+
+==================================================
+OBIETTIVO FINALE
+
+Il sistema non deve più limitarsi a dire:
+
+“RSI è ribassista”
+
+ma deve arrivare a dire:
+
+“Questo setup ha caratteristiche simili a 84 segnali storici.
+Win Rate storico: 69%.
+Profit Factor: 1.91.
+Qualità segnale: ELITE.”
+
+Implementare il database, il motore di backtesting, le statistiche e la dashboard prima di aggiungere nuovi indicatori tecnici

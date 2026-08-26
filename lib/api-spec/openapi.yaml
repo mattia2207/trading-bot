@@ -1,0 +1,589 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: portfolio
+  - name: trades
+  - name: analysis
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /portfolio:
+    get:
+      operationId: getPortfolio
+      tags: [portfolio]
+      summary: Get portfolio
+      responses:
+        "200":
+          description: Portfolio data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+    patch:
+      operationId: updatePortfolio
+      tags: [portfolio]
+      summary: Update portfolio settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePortfolioBody"
+      responses:
+        "200":
+          description: Updated portfolio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /portfolio/summary:
+    get:
+      operationId: getPortfolioSummary
+      tags: [portfolio]
+      summary: Get portfolio summary stats
+      responses:
+        "200":
+          description: Portfolio summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioSummary"
+
+  /portfolio/metrics:
+    get:
+      operationId: getPortfolioMetrics
+      tags: [portfolio]
+      summary: Get performance metrics
+      description: Win Rate, Profit Factor, Total PnL computed from closed trades
+      responses:
+        "200":
+          description: Performance metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerformanceMetrics"
+
+  /trades:
+    get:
+      operationId: getTrades
+      tags: [trades]
+      summary: List open trades
+      responses:
+        "200":
+          description: List of open trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trade"
+    post:
+      operationId: addTrade
+      tags: [trades]
+      summary: Analyze and add a trade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeInput"
+      responses:
+        "200":
+          description: Trade analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /trades/closed:
+    get:
+      operationId: getClosedTrades
+      tags: [trades]
+      summary: List closed trades history
+      responses:
+        "200":
+          description: List of closed trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClosedTrade"
+
+  /trades/live:
+    get:
+      operationId: getTradesLive
+      tags: [trades]
+      summary: Get open trades with live price and unrealized PnL
+      responses:
+        "200":
+          description: List of live trade snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LiveTrade"
+
+  /trades/{ticker}:
+    delete:
+      operationId: deleteTrade
+      tags: [trades]
+      summary: Remove trade from tracking
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trade removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "404":
+          description: Trade not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /trades/{ticker}/status:
+    patch:
+      operationId: updateTradeStatus
+      tags: [trades]
+      summary: Pause or resume monitoring for a tracked asset
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, paused]
+              required: [status]
+      responses:
+        "200":
+          description: Trade status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "404":
+          description: Trade not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /symbols/search:
+    get:
+      operationId: searchSymbols
+      tags: [analysis]
+      summary: Search for a ticker by company name, ticker, ISIN, crypto or ETF name
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching symbols
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SymbolSearchResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /analysis/{ticker}:
+    get:
+      operationId: analyzeTicker
+      tags: [analysis]
+      summary: Analyze a ticker
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
+        "400":
+          description: Bad request or data fetch error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Trade:
+      type: object
+      properties:
+        ticker:
+          type: string
+        entry:
+          type: number
+        tp:
+          type: number
+        sl:
+          type: number
+        atr:
+          type: number
+        direction:
+          type: string
+          enum: [LONG, SHORT]
+        reason:
+          type: string
+        investAmount:
+          type: number
+        addedAt:
+          type: string
+        status:
+          type: string
+          enum: [active, paused]
+      required: [ticker, entry, tp, sl, atr, direction, reason, investAmount, addedAt]
+
+    ClosedTrade:
+      type: object
+      properties:
+        ticker:
+          type: string
+        entry:
+          type: number
+        tp:
+          type: number
+        sl:
+          type: number
+        atr:
+          type: number
+        direction:
+          type: string
+          enum: [LONG, SHORT]
+        reason:
+          type: string
+        investAmount:
+          type: number
+        addedAt:
+          type: string
+        closedAt:
+          type: string
+        closeReason:
+          type: string
+          enum: [TP_HIT, SL_HIT, MANUAL]
+        exitPrice:
+          type: number
+        pnl:
+          type: number
+      required: [ticker, entry, tp, sl, atr, direction, reason, investAmount, addedAt, closedAt, closeReason, exitPrice, pnl]
+
+    TradeInput:
+      type: object
+      properties:
+        ticker:
+          type: string
+        investAmount:
+          type: number
+      required: [ticker]
+
+    SymbolSearchMatch:
+      type: object
+      properties:
+        symbol:
+          type: string
+        instrumentName:
+          type: string
+        exchange:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        instrumentType:
+          type: ["string", "null"]
+        currency:
+          type: ["string", "null"]
+      required: [symbol, instrumentName]
+
+    SymbolSearchResult:
+      type: object
+      properties:
+        query:
+          type: string
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/SymbolSearchMatch"
+        providerLimited:
+          type: boolean
+        note:
+          type: ["string", "null"]
+      required: [query, matches, providerLimited]
+
+    TradeResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        signal:
+          type: string
+        direction:
+          type: ["string", "null"]
+        score:
+          type: ["number", "null"]
+        verdict:
+          type: ["string", "null"]
+        confidenceScore:
+          type: ["number", "null"]
+        estimatedProbability:
+          type: ["number", "null"]
+        reason:
+          type: ["string", "null"]
+        trade:
+          $ref: "#/components/schemas/Trade"
+      required: [success, message]
+
+    DeleteResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+
+    Portfolio:
+      type: object
+      properties:
+        balance:
+          type: number
+        telegramChatId:
+          type: ["string", "null"]
+        trades:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trade"
+        closedTrades:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClosedTrade"
+      required: [balance, trades, closedTrades]
+
+    UpdatePortfolioBody:
+      type: object
+      properties:
+        balance:
+          type: number
+        telegramChatId:
+          type: string
+
+    PortfolioSummary:
+      type: object
+      properties:
+        totalTrades:
+          type: number
+        buySignals:
+          type: number
+        avgScore:
+          type: number
+        highestScoringTicker:
+          type: ["string", "null"]
+      required: [totalTrades, buySignals, avgScore]
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        totalPnl:
+          type: number
+        winRate:
+          type: number
+        profitFactor:
+          type: number
+        totalClosedTrades:
+          type: number
+        winningTrades:
+          type: number
+        losingTrades:
+          type: number
+      required: [totalPnl, winRate, profitFactor, totalClosedTrades, winningTrades, losingTrades]
+
+    LiveTrade:
+      type: object
+      properties:
+        ticker:
+          type: string
+        direction:
+          type: string
+          enum: [LONG, SHORT]
+        entry:
+          type: number
+        tp:
+          type: number
+        sl:
+          type: number
+        atr:
+          type: number
+        reason:
+          type: string
+        investAmount:
+          type: number
+        addedAt:
+          type: string
+        currentPrice:
+          type: ["number", "null"]
+        unrealizedPnl:
+          type: ["number", "null"]
+        priceChangePercent:
+          type: ["number", "null"]
+      required: [ticker, direction, entry, tp, sl, atr, reason, investAmount, addedAt, currentPrice, unrealizedPnl, priceChangePercent]
+
+    ScoreBreakdown:
+      type: object
+      properties:
+        trend:
+          type: number
+        momentum:
+          type: number
+        volatility:
+          type: number
+        volume:
+          type: number
+        structure:
+          type: number
+        multiTimeframe:
+          type: number
+      required: [trend, momentum, volatility, volume, structure, multiTimeframe]
+
+    MtfAnalysis:
+      type: object
+      properties:
+        m15:
+          type: string
+        h1:
+          type: string
+        h4:
+          type: string
+        daily:
+          type: string
+      required: [m15, h1, h4, daily]
+
+    AnalysisResult:
+      type: object
+      properties:
+        ticker:
+          type: string
+        price:
+          type: number
+        score:
+          type: number
+        signal:
+          type: string
+        direction:
+          type: string
+          enum: [LONG, SHORT, WAIT]
+        verdict:
+          type: string
+          enum: [FORTE_BUY, BUY, NEUTRALE, SELL, FORTE_SELL]
+        reason:
+          type: string
+        tp:
+          type: number
+        sl:
+          type: number
+        atr:
+          type: number
+        ema50:
+          type: number
+        ema100:
+          type: number
+        ema200:
+          type: number
+        rsi:
+          type: number
+        macdHistogram:
+          type: number
+        volumeRatio:
+          type: number
+        falseSignalRisk:
+          type: string
+          enum: [Basso, Medio, Alto]
+        confidenceScore:
+          type: number
+        estimatedProbability:
+          type: number
+        scoreBreakdown:
+          $ref: "#/components/schemas/ScoreBreakdown"
+        mtfAnalysis:
+          $ref: "#/components/schemas/MtfAnalysis"
+        invalidationConditions:
+          type: array
+          items:
+            type: string
+      required: [ticker, price, score, signal, direction, verdict, reason, tp, sl, atr, ema50, ema100, ema200, rsi, macdHistogram, volumeRatio, falseSignalRisk, confidenceScore, estimatedProbability, scoreBreakdown, mtfAnalysis, invalidationConditions]
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
