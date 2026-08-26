@@ -1,3 +1,4 @@
 - [Signal system architecture](signal-system.md) — DB signal recording, quality tiers, auto-learning, Telegram alerts system design decisions
 - [Advisor Bot Terminal — refactor decisions](advisor-bot-refactor.md) — zod must be in api-server deps, expireOldSignals in monitor only (not request path), memo + ReactNode import pattern
 - [Express route ordering with :id params](express-route-ordering.md) — `/resource/:id` must be registered AFTER sibling literal routes like `/resource/special-name`, or the literal gets swallowed as the id param
+- [GitHub publishing](github-publishing.md) — empty GitHub repositories need an initial contents commit before Git Data API tree creation
