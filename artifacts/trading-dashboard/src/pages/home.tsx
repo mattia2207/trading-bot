@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetPortfolio, useUpdatePortfolio, getGetPortfolioQueryKey } from "@workspace/api-client-react";
+import {
+  useGetPortfolio, useUpdatePortfolio, getGetPortfolioQueryKey,
+  useGetPlatformStatus, useGetPlatformSettings, useUpdateKillSwitch,
+} from "@workspace/api-client-react";
 import { PortfolioSummary } from "@/components/portfolio-summary";
 import { AddTradeForm } from "@/components/add-trade-form";
 import { TradesTable } from "@/components/trades-table";
@@ -10,7 +13,7 @@ import { ClosedTradesTable } from "@/components/closed-trades-table";
 import { SignalStats } from "@/components/signal-stats";
 import { QualityFilter } from "@/components/quality-filter";
 import { SignalList } from "@/components/signal-list";
-import { Terminal, Activity, Bell, CheckCircle2, Database, BarChart2 } from "lucide-react";
+import { Terminal, Activity, Bell, CheckCircle2, Database, BarChart2, ShieldCheck, Power } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -77,6 +80,75 @@ function TelegramCard() {
   );
 }
 
+function PlatformStatusCard() {
+  const { data: status } = useGetPlatformStatus({
+    query: { queryKey: ["platform-status"], refetchInterval: 30_000 },
+  });
+  const { data: settings } = useGetPlatformSettings({
+    query: { queryKey: ["platform-settings"] },
+  });
+  const killSwitch = useUpdateKillSwitch();
+
+  const toggleKillSwitch = () => killSwitch.mutate({
+    data: {
+      active: !status?.killSwitchActive,
+      reason: status?.killSwitchActive ? null : "Arresto manuale dal terminale",
+    },
+  });
+
+  return (
+    <Card className="bg-card border-border rounded-sm shadow-none">
+      <CardContent className="p-4 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-full">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold">Guardrail operativi</h2>
+              <p className="text-xs text-muted-foreground">Paper trading · Spot · LONG only · approvazione manuale</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant={status?.killSwitchActive ? "default" : "outline"}
+            className="rounded-sm gap-2"
+            onClick={toggleKillSwitch}
+            disabled={!status || killSwitch.isPending}
+          >
+            <Power className="w-3.5 h-3.5" />
+            {status?.killSwitchActive ? "Riattiva esecuzione" : "Arresto di emergenza"}
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+          <StatusPill label="Modalità" value={status?.executionMode === "testnet" ? "TESTNET" : "PAPER"} tone={status?.executionMode === "testnet" ? "amber" : "green"} />
+          <StatusPill label="API" value={status?.apiStatus?.toUpperCase() ?? "—"} tone="green" />
+          <StatusPill label="Database" value={status?.databaseStatus?.toUpperCase() ?? "—"} tone="green" />
+          <StatusPill label="Rischio / trade" value={settings ? `${settings.riskPerTradePct}%` : "—"} />
+          <StatusPill label="R:R minimo" value={settings ? `${settings.minRewardRisk}x` : "—"} />
+        </div>
+        {status?.killSwitchActive && (
+          <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-sm px-3 py-2">
+            {status.killSwitchActive ? "Esecuzione bloccata dal kill switch." : ""}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatusPill({ label, value, tone = "muted" }: { label: string; value: string; tone?: "green" | "amber" | "muted" }) {
+  const toneClass = tone === "green"
+    ? "text-emerald-400"
+    : tone === "amber" ? "text-amber-400" : "text-foreground";
+  return (
+    <div className="bg-background border border-border rounded-sm px-3 py-2">
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</div>
+      <div className={`font-mono font-semibold mt-1 ${toneClass}`}>{value}</div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [investAmount, setInvestAmount] = useState(100);
   const [, navigate] = useLocation();
@@ -111,6 +183,7 @@ export default function Home() {
 
       <main className="flex-1 container max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8">
         <PerformanceMetrics />
+        <PlatformStatusCard />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">

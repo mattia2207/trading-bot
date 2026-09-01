@@ -40,7 +40,7 @@ export async function getRollingMetrics(window = 20): Promise<
 > {
   const res = await pool.query<{
     rn: string; asset: string; closed_at: string;
-    profit_pct: string; status: string;
+    profit_pct: number; status: string;
   }>(`
     SELECT
       ROW_NUMBER() OVER (ORDER BY closed_at ASC) AS rn,

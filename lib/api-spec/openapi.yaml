@@ -12,6 +12,10 @@ tags:
   - name: portfolio
   - name: trades
   - name: analysis
+  - name: platform
+  - name: risk
+  - name: orders
+  - name: backtest
 paths:
   /healthz:
     get:
@@ -25,6 +29,153 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /readiness:
+    get:
+      operationId: readinessCheck
+      tags: [health]
+      summary: Check database and execution readiness
+      responses:
+        "200":
+          description: Readiness status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessStatus"
+        "503":
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessStatus"
+
+  /platform/status:
+    get:
+      operationId: getPlatformStatus
+      tags: [platform]
+      summary: Get safe runtime status
+      responses:
+        "200":
+          description: Runtime status without secrets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStatus"
+
+  /platform/settings:
+    get:
+      operationId: getPlatformSettings
+      tags: [platform]
+      summary: Get owner trading settings
+      responses:
+        "200":
+          description: Trading settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformSettings"
+    patch:
+      operationId: updatePlatformSettings
+      tags: [platform]
+      summary: Update safe trading settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformSettings"
+        "400":
+          description: Invalid settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /platform/kill-switch:
+    patch:
+      operationId: updateKillSwitch
+      tags: [risk]
+      summary: Enable or disable the persistent kill switch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KillSwitchUpdate"
+      responses:
+        "200":
+          description: Kill switch status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KillSwitchStatus"
+
+  /platform/positions:
+    get:
+      operationId: getPositions
+      tags: [platform]
+      summary: List persisted spot positions
+      responses:
+        "200":
+          description: Positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Position"
+
+  /platform/orders:
+    get:
+      operationId: getOrders
+      tags: [orders]
+      summary: List persisted orders
+      responses:
+        "200":
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /platform/fills:
+    get:
+      operationId: getFills
+      tags: [orders]
+      summary: List persisted fills
+      responses:
+        "200":
+          description: Fills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Fill"
+
+  /platform/audit:
+    get:
+      operationId: getAuditEvents
+      tags: [platform]
+      summary: List safe audit events
+      responses:
+        "200":
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEvent"
 
   /portfolio:
     get:
@@ -142,21 +293,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/ClosedTrade"
 
-  /trades/live:
-    get:
-      operationId: getTradesLive
-      tags: [trades]
-      summary: Get open trades with live price and unrealized PnL
-      responses:
-        "200":
-          description: List of live trade snapshots
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LiveTrade"
-
   /trades/{ticker}:
     delete:
       operationId: deleteTrade
@@ -268,6 +404,63 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /analysis/{ticker}/preview:
+    get:
+      operationId: previewAnalysis
+      tags: [analysis]
+      summary: Analyze a ticker without persisting a signal
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Non-persisted analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
+
+  /signals/{id}/approve:
+    post:
+      operationId: approveSignal
+      tags: [orders]
+      summary: Manually approve a qualified LONG signal for execution
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approval result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalApproval"
+
+  /backtests:
+    post:
+      operationId: runBacktest
+      tags: [backtest]
+      summary: Run a reproducible closed-candle backtest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BacktestInput"
+      responses:
+        "200":
+          description: Backtest result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BacktestResult"
+
 components:
   schemas:
     HealthStatus:
@@ -276,6 +469,291 @@ components:
         status:
           type: string
       required: [status]
+
+    ReadinessStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ready, not_ready]
+        database:
+          type: string
+          enum: [up, down]
+        executionMode:
+          type: string
+          enum: [paper, testnet]
+        testnetEnabled:
+          type: boolean
+        dataAvailable:
+          type: boolean
+        reason:
+          type: ["string", "null"]
+      required: [status, database, executionMode, testnetEnabled, dataAvailable]
+
+    PlatformStatus:
+      type: object
+      properties:
+        executionMode:
+          type: string
+          enum: [paper, testnet]
+        testnetEnabled:
+          type: boolean
+        testnetConfigured:
+          type: boolean
+        killSwitchActive:
+          type: boolean
+        apiStatus:
+          type: string
+          enum: [up, degraded, down]
+        websocketStatus:
+          type: string
+          enum: [connected, disconnected, unavailable]
+        databaseStatus:
+          type: string
+          enum: [up, down]
+        manualApprovalRequired:
+          type: boolean
+        spotOnly:
+          type: boolean
+        longOnly:
+          type: boolean
+      required: [executionMode, testnetEnabled, testnetConfigured, killSwitchActive, apiStatus, websocketStatus, databaseStatus, manualApprovalRequired, spotOnly, longOnly]
+
+    PlatformSettings:
+      type: object
+      properties:
+        riskPerTradePct:
+          type: number
+        maxExposurePct:
+          type: number
+        maxOpenPositions:
+          type: integer
+        maxDailyTrades:
+          type: integer
+        maxDailyLossPct:
+          type: number
+        cooldownMinutes:
+          type: integer
+        minRewardRisk:
+          type: number
+        paperStartingBalance:
+          type: number
+      required: [riskPerTradePct, maxExposurePct, maxOpenPositions, maxDailyTrades, maxDailyLossPct, cooldownMinutes, minRewardRisk, paperStartingBalance]
+
+    PlatformSettingsUpdate:
+      type: object
+      properties:
+        riskPerTradePct:
+          type: number
+          minimum: 0.01
+          maximum: 1
+        maxExposurePct:
+          type: number
+          minimum: 0.01
+          maximum: 100
+        maxOpenPositions:
+          type: integer
+          minimum: 1
+          maximum: 2
+        maxDailyTrades:
+          type: integer
+          minimum: 1
+          maximum: 3
+        maxDailyLossPct:
+          type: number
+          minimum: 0.01
+          maximum: 2
+        cooldownMinutes:
+          type: integer
+          minimum: 0
+          maximum: 10080
+        minRewardRisk:
+          type: number
+          minimum: 1.5
+          maximum: 20
+        paperStartingBalance:
+          type: number
+          minimum: 0
+
+    KillSwitchUpdate:
+      type: object
+      properties:
+        active:
+          type: boolean
+        reason:
+          type: ["string", "null"]
+      required: [active]
+
+    KillSwitchStatus:
+      type: object
+      properties:
+        active:
+          type: boolean
+        reason:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+      required: [active, updatedAt]
+
+    Position:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        side:
+          type: string
+          enum: [LONG]
+        quantity:
+          type: number
+        entryPrice:
+          type: number
+        stopLoss:
+          type: number
+        takeProfit:
+          type: number
+        status:
+          type: string
+          enum: [OPEN, CLOSED]
+        unrealizedPnl:
+          type: number
+        openedAt:
+          type: string
+      required: [id, symbol, side, quantity, entryPrice, stopLoss, takeProfit, status, unrealizedPnl, openedAt]
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        side:
+          type: string
+          enum: [BUY, SELL]
+        orderType:
+          type: string
+          enum: [MARKET, LIMIT, STOP_LOSS_LIMIT, TAKE_PROFIT_LIMIT]
+        status:
+          type: string
+          enum: [CREATED, SUBMITTED, ACKNOWLEDGED, PARTIALLY_FILLED, FILLED, CANCELED, REJECTED, UNKNOWN]
+        clientOrderId:
+          type: string
+        quantity:
+          type: number
+        price:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+      required: [id, symbol, side, orderType, status, clientOrderId, quantity, createdAt]
+
+    Fill:
+      type: object
+      properties:
+        id:
+          type: integer
+        orderId:
+          type: integer
+        symbol:
+          type: string
+        quantity:
+          type: number
+        price:
+          type: number
+        fee:
+          type: number
+        feeAsset:
+          type: string
+        filledAt:
+          type: string
+      required: [id, orderId, symbol, quantity, price, fee, feeAsset, filledAt]
+
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        eventType:
+          type: string
+        symbol:
+          type: ["string", "null"]
+        detail:
+          type: string
+        createdAt:
+          type: string
+      required: [id, eventType, detail, createdAt]
+
+    SignalApproval:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        order:
+          type: ["object", "null"]
+          $ref: "#/components/schemas/Order"
+      required: [success, message]
+
+    BacktestInput:
+      type: object
+      properties:
+        symbol:
+          type: string
+        interval:
+          type: string
+          enum: [1h]
+        candles:
+          type: array
+          items:
+            type: object
+            properties:
+              openTime:
+                type: string
+              open:
+                type: number
+              high:
+                type: number
+              low:
+                type: number
+              close:
+                type: number
+              volume:
+                type: number
+            required: [openTime, open, high, low, close, volume]
+        feePct:
+          type: number
+          minimum: 0
+        slippagePct:
+          type: number
+          minimum: 0
+      required: [symbol, interval, candles]
+
+    BacktestResult:
+      type: object
+      properties:
+        symbol:
+          type: string
+        trades:
+          type: integer
+        outOfSampleTrades:
+          type: integer
+        walkForwardWindows:
+          type: integer
+        winRate:
+          type: number
+        profitFactor:
+          type: number
+        expectancy:
+          type: number
+        maxDrawdown:
+          type: number
+        equityCurve:
+          type: array
+          items:
+            type: number
+      required: [symbol, trades, outOfSampleTrades, walkForwardWindows, winRate, profitFactor, expectancy, maxDrawdown, equityCurve]
 
     Trade:
       type: object
@@ -292,7 +770,7 @@ components:
           type: number
         direction:
           type: string
-          enum: [LONG, SHORT]
+          enum: [LONG]
         reason:
           type: string
         investAmount:
@@ -319,7 +797,7 @@ components:
           type: number
         direction:
           type: string
-          enum: [LONG, SHORT]
+          enum: [LONG]
         reason:
           type: string
         investAmount:
@@ -395,7 +873,7 @@ components:
           type: ["string", "null"]
         confidenceScore:
           type: ["number", "null"]
-        estimatedProbability:
+        heuristicConfidence:
           type: ["number", "null"]
         reason:
           type: ["string", "null"]
@@ -467,36 +945,6 @@ components:
           type: number
       required: [totalPnl, winRate, profitFactor, totalClosedTrades, winningTrades, losingTrades]
 
-    LiveTrade:
-      type: object
-      properties:
-        ticker:
-          type: string
-        direction:
-          type: string
-          enum: [LONG, SHORT]
-        entry:
-          type: number
-        tp:
-          type: number
-        sl:
-          type: number
-        atr:
-          type: number
-        reason:
-          type: string
-        investAmount:
-          type: number
-        addedAt:
-          type: string
-        currentPrice:
-          type: ["number", "null"]
-        unrealizedPnl:
-          type: ["number", "null"]
-        priceChangePercent:
-          type: ["number", "null"]
-      required: [ticker, direction, entry, tp, sl, atr, reason, investAmount, addedAt, currentPrice, unrealizedPnl, priceChangePercent]
-
     ScoreBreakdown:
       type: object
       properties:
@@ -540,10 +988,10 @@ components:
           type: string
         direction:
           type: string
-          enum: [LONG, SHORT, WAIT]
+          enum: [LONG, WAIT]
         verdict:
           type: string
-          enum: [FORTE_BUY, BUY, NEUTRALE, SELL, FORTE_SELL]
+          enum: [FORTE_BUY, BUY, NEUTRALE]
         reason:
           type: string
         tp:
@@ -569,7 +1017,7 @@ components:
           enum: [Basso, Medio, Alto]
         confidenceScore:
           type: number
-        estimatedProbability:
+        heuristicConfidence:
           type: number
         scoreBreakdown:
           $ref: "#/components/schemas/ScoreBreakdown"
@@ -579,7 +1027,7 @@ components:
           type: array
           items:
             type: string
-      required: [ticker, price, score, signal, direction, verdict, reason, tp, sl, atr, ema50, ema100, ema200, rsi, macdHistogram, volumeRatio, falseSignalRisk, confidenceScore, estimatedProbability, scoreBreakdown, mtfAnalysis, invalidationConditions]
+      required: [ticker, price, score, signal, direction, verdict, reason, tp, sl, atr, ema50, ema100, ema200, rsi, macdHistogram, volumeRatio, falseSignalRisk, confidenceScore, heuristicConfidence, scoreBreakdown, mtfAnalysis, invalidationConditions]
 
     ApiError:
       type: object

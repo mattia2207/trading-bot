@@ -9,12 +9,294 @@ export interface HealthStatus {
   status: string;
 }
 
+export type ReadinessStatusStatus = typeof ReadinessStatusStatus[keyof typeof ReadinessStatusStatus];
+
+
+export const ReadinessStatusStatus = {
+  ready: 'ready',
+  not_ready: 'not_ready',
+} as const;
+
+export type ReadinessStatusDatabase = typeof ReadinessStatusDatabase[keyof typeof ReadinessStatusDatabase];
+
+
+export const ReadinessStatusDatabase = {
+  up: 'up',
+  down: 'down',
+} as const;
+
+export type ReadinessStatusExecutionMode = typeof ReadinessStatusExecutionMode[keyof typeof ReadinessStatusExecutionMode];
+
+
+export const ReadinessStatusExecutionMode = {
+  paper: 'paper',
+  testnet: 'testnet',
+} as const;
+
+export interface ReadinessStatus {
+  status: ReadinessStatusStatus;
+  database: ReadinessStatusDatabase;
+  executionMode: ReadinessStatusExecutionMode;
+  testnetEnabled: boolean;
+  dataAvailable: boolean;
+  /** @nullable */
+  reason?: string | null;
+}
+
+export type PlatformStatusExecutionMode = typeof PlatformStatusExecutionMode[keyof typeof PlatformStatusExecutionMode];
+
+
+export const PlatformStatusExecutionMode = {
+  paper: 'paper',
+  testnet: 'testnet',
+} as const;
+
+export type PlatformStatusApiStatus = typeof PlatformStatusApiStatus[keyof typeof PlatformStatusApiStatus];
+
+
+export const PlatformStatusApiStatus = {
+  up: 'up',
+  degraded: 'degraded',
+  down: 'down',
+} as const;
+
+export type PlatformStatusWebsocketStatus = typeof PlatformStatusWebsocketStatus[keyof typeof PlatformStatusWebsocketStatus];
+
+
+export const PlatformStatusWebsocketStatus = {
+  connected: 'connected',
+  disconnected: 'disconnected',
+  unavailable: 'unavailable',
+} as const;
+
+export type PlatformStatusDatabaseStatus = typeof PlatformStatusDatabaseStatus[keyof typeof PlatformStatusDatabaseStatus];
+
+
+export const PlatformStatusDatabaseStatus = {
+  up: 'up',
+  down: 'down',
+} as const;
+
+export interface PlatformStatus {
+  executionMode: PlatformStatusExecutionMode;
+  testnetEnabled: boolean;
+  testnetConfigured: boolean;
+  killSwitchActive: boolean;
+  apiStatus: PlatformStatusApiStatus;
+  websocketStatus: PlatformStatusWebsocketStatus;
+  databaseStatus: PlatformStatusDatabaseStatus;
+  manualApprovalRequired: boolean;
+  spotOnly: boolean;
+  longOnly: boolean;
+}
+
+export interface PlatformSettings {
+  riskPerTradePct: number;
+  maxExposurePct: number;
+  maxOpenPositions: number;
+  maxDailyTrades: number;
+  maxDailyLossPct: number;
+  cooldownMinutes: number;
+  minRewardRisk: number;
+  paperStartingBalance: number;
+}
+
+export interface PlatformSettingsUpdate {
+  /**
+     * @minimum 0.01
+     * @maximum 1
+     */
+  riskPerTradePct?: number;
+  /**
+     * @minimum 0.01
+     * @maximum 100
+     */
+  maxExposurePct?: number;
+  /**
+     * @minimum 1
+     * @maximum 2
+     */
+  maxOpenPositions?: number;
+  /**
+     * @minimum 1
+     * @maximum 3
+     */
+  maxDailyTrades?: number;
+  /**
+     * @minimum 0.01
+     * @maximum 2
+     */
+  maxDailyLossPct?: number;
+  /**
+     * @minimum 0
+     * @maximum 10080
+     */
+  cooldownMinutes?: number;
+  /**
+     * @minimum 1.5
+     * @maximum 20
+     */
+  minRewardRisk?: number;
+  /** @minimum 0 */
+  paperStartingBalance?: number;
+}
+
+export interface KillSwitchUpdate {
+  active: boolean;
+  /** @nullable */
+  reason?: string | null;
+}
+
+export interface KillSwitchStatus {
+  active: boolean;
+  /** @nullable */
+  reason?: string | null;
+  updatedAt: string;
+}
+
+export type PositionSide = typeof PositionSide[keyof typeof PositionSide];
+
+
+export const PositionSide = {
+  LONG: 'LONG',
+} as const;
+
+export type PositionStatus = typeof PositionStatus[keyof typeof PositionStatus];
+
+
+export const PositionStatus = {
+  OPEN: 'OPEN',
+  CLOSED: 'CLOSED',
+} as const;
+
+export interface Position {
+  id: number;
+  symbol: string;
+  side: PositionSide;
+  quantity: number;
+  entryPrice: number;
+  stopLoss: number;
+  takeProfit: number;
+  status: PositionStatus;
+  unrealizedPnl: number;
+  openedAt: string;
+}
+
+export type OrderSide = typeof OrderSide[keyof typeof OrderSide];
+
+
+export const OrderSide = {
+  BUY: 'BUY',
+  SELL: 'SELL',
+} as const;
+
+export type OrderOrderType = typeof OrderOrderType[keyof typeof OrderOrderType];
+
+
+export const OrderOrderType = {
+  MARKET: 'MARKET',
+  LIMIT: 'LIMIT',
+  STOP_LOSS_LIMIT: 'STOP_LOSS_LIMIT',
+  TAKE_PROFIT_LIMIT: 'TAKE_PROFIT_LIMIT',
+} as const;
+
+export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
+
+
+export const OrderStatus = {
+  CREATED: 'CREATED',
+  SUBMITTED: 'SUBMITTED',
+  ACKNOWLEDGED: 'ACKNOWLEDGED',
+  PARTIALLY_FILLED: 'PARTIALLY_FILLED',
+  FILLED: 'FILLED',
+  CANCELED: 'CANCELED',
+  REJECTED: 'REJECTED',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+export interface Order {
+  id: number;
+  symbol: string;
+  side: OrderSide;
+  orderType: OrderOrderType;
+  status: OrderStatus;
+  clientOrderId: string;
+  quantity: number;
+  /** @nullable */
+  price?: number | null;
+  createdAt: string;
+}
+
+export interface Fill {
+  id: number;
+  orderId: number;
+  symbol: string;
+  quantity: number;
+  price: number;
+  fee: number;
+  feeAsset: string;
+  filledAt: string;
+}
+
+export interface AuditEvent {
+  id: number;
+  eventType: string;
+  /** @nullable */
+  symbol?: string | null;
+  detail: string;
+  createdAt: string;
+}
+
+export interface SignalApproval {
+  success: boolean;
+  message: string;
+  /** @nullable */
+  order?: Order | null;
+}
+
+export type BacktestInputInterval = typeof BacktestInputInterval[keyof typeof BacktestInputInterval];
+
+
+export const BacktestInputInterval = {
+  '1h': '1h',
+} as const;
+
+export type BacktestInputCandlesItem = {
+  openTime: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export interface BacktestInput {
+  symbol: string;
+  interval: BacktestInputInterval;
+  candles: BacktestInputCandlesItem[];
+  /** @minimum 0 */
+  feePct?: number;
+  /** @minimum 0 */
+  slippagePct?: number;
+}
+
+export interface BacktestResult {
+  symbol: string;
+  trades: number;
+  outOfSampleTrades: number;
+  walkForwardWindows: number;
+  winRate: number;
+  profitFactor: number;
+  expectancy: number;
+  maxDrawdown: number;
+  equityCurve: number[];
+}
+
 export type TradeDirection = typeof TradeDirection[keyof typeof TradeDirection];
 
 
 export const TradeDirection = {
   LONG: 'LONG',
-  SHORT: 'SHORT',
 } as const;
 
 export type TradeStatus = typeof TradeStatus[keyof typeof TradeStatus];
@@ -43,7 +325,6 @@ export type ClosedTradeDirection = typeof ClosedTradeDirection[keyof typeof Clos
 
 export const ClosedTradeDirection = {
   LONG: 'LONG',
-  SHORT: 'SHORT',
 } as const;
 
 export type ClosedTradeCloseReason = typeof ClosedTradeCloseReason[keyof typeof ClosedTradeCloseReason];
@@ -110,7 +391,7 @@ export interface TradeResult {
   /** @nullable */
   confidenceScore?: number | null;
   /** @nullable */
-  estimatedProbability?: number | null;
+  heuristicConfidence?: number | null;
   /** @nullable */
   reason?: string | null;
   trade?: Trade;
@@ -151,32 +432,6 @@ export interface PerformanceMetrics {
   losingTrades: number;
 }
 
-export type LiveTradeDirection = typeof LiveTradeDirection[keyof typeof LiveTradeDirection];
-
-
-export const LiveTradeDirection = {
-  LONG: 'LONG',
-  SHORT: 'SHORT',
-} as const;
-
-export interface LiveTrade {
-  ticker: string;
-  direction: LiveTradeDirection;
-  entry: number;
-  tp: number;
-  sl: number;
-  atr: number;
-  reason: string;
-  investAmount: number;
-  addedAt: string;
-  /** @nullable */
-  currentPrice: number | null;
-  /** @nullable */
-  unrealizedPnl: number | null;
-  /** @nullable */
-  priceChangePercent: number | null;
-}
-
 export interface ScoreBreakdown {
   trend: number;
   momentum: number;
@@ -198,7 +453,6 @@ export type AnalysisResultDirection = typeof AnalysisResultDirection[keyof typeo
 
 export const AnalysisResultDirection = {
   LONG: 'LONG',
-  SHORT: 'SHORT',
   WAIT: 'WAIT',
 } as const;
 
@@ -209,8 +463,6 @@ export const AnalysisResultVerdict = {
   FORTE_BUY: 'FORTE_BUY',
   BUY: 'BUY',
   NEUTRALE: 'NEUTRALE',
-  SELL: 'SELL',
-  FORTE_SELL: 'FORTE_SELL',
 } as const;
 
 export type AnalysisResultFalseSignalRisk = typeof AnalysisResultFalseSignalRisk[keyof typeof AnalysisResultFalseSignalRisk];
@@ -241,7 +493,7 @@ export interface AnalysisResult {
   volumeRatio: number;
   falseSignalRisk: AnalysisResultFalseSignalRisk;
   confidenceScore: number;
-  estimatedProbability: number;
+  heuristicConfidence: number;
   scoreBreakdown: ScoreBreakdown;
   mtfAnalysis: MtfAnalysis;
   invalidationConditions: string[];

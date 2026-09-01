@@ -1,7 +1,5 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { startTelegramMonitor } from "./lib/telegram.js";
-import { initSignalsSchema } from "./lib/signals.js";
 
 const rawPort = process.env["PORT"];
 
@@ -25,11 +23,4 @@ app.listen(port, async (err) => {
 
   logger.info({ port }, "Server listening");
 
-  try {
-    await initSignalsSchema();
-  } catch (dbErr) {
-    logger.error({ err: dbErr }, "DB schema init failed — continuing without DB");
-  }
-
-  startTelegramMonitor();
 });

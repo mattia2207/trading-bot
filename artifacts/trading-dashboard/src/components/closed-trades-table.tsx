@@ -74,11 +74,7 @@ export function ClosedTradesTable() {
                           {trade.ticker}
                         </TableCell>
                         <TableCell>
-                          {trade.direction === "SHORT" ? (
-                            <Badge variant="outline" className="text-red-500 border-red-500/30 bg-red-500/10 rounded-sm font-mono text-[10px] px-1.5 h-5">SHORT</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 rounded-sm font-mono text-[10px] px-1.5 h-5">LONG</Badge>
-                          )}
+                          <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 rounded-sm font-mono text-[10px] px-1.5 h-5">LONG</Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="rounded-sm font-mono text-[10px] px-1.5 h-5 bg-muted">

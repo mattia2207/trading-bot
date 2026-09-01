@@ -15,10 +15,12 @@ Stored as integer 0–6 in `signals.confluence` column.
 ## Market Regime
 Computed from atrRatio + EMA stack alignment. Values (Italian): Alta Volatilità, Bassa Volatilità, Trend Forte Rialzista, Trend Forte Ribassista, Laterale, Trend Debole Rialzista, Trend Debole Ribassista.
 
-## DB Schema Init
-`initSignalsSchema()` uses CREATE TABLE IF NOT EXISTS (no Drizzle CLI migrations). Called at server startup in index.ts inside app.listen callback.
+## Persistence and execution boundary
+Operational state is persisted in PostgreSQL through Drizzle-managed schema changes; runtime DDL is not part of startup. Execution defaults to Paper and the only exchange adapter is explicitly gated Binance Spot Testnet.
 
-**Why:** Keeps schema in code, no migration files needed for this project.
+**Why:** Startup DDL caused deployment failures when the managed database endpoint was unavailable, while a fail-closed broker boundary prevents accidental exchange requests.
+
+**How to apply:** Keep schema changes in Drizzle migrations/push workflows, and require both testnet mode flags plus both Binance credentials before constructing an exchange request.
 
 ## Signal Persistence
 Every call to `/api/analysis/:ticker` and POST `/api/trades` runs `persistSignal()` (fire-and-forget). Telegram alerts only sent for qualified signals (tier != null).

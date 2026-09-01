@@ -47,7 +47,7 @@ export interface AnalysisData {
   price: number;
   score: number;
   signal: "BUY" | "WAIT";
-  direction: "LONG" | "SHORT" | "WAIT";
+  direction: "LONG" | "WAIT";
   verdict: "FORTE_BUY" | "BUY" | "NEUTRALE" | "SELL" | "FORTE_SELL";
   reason: string;
   tp: number;
@@ -61,7 +61,7 @@ export interface AnalysisData {
   volumeRatio: number;
   falseSignalRisk: "Basso" | "Medio" | "Alto";
   confidenceScore: number;
-  estimatedProbability: number;
+  heuristicConfidence: number;
   scoreBreakdown: ScoreBreakdown;
   confluenceFactors: ConfluenceFactors;
   mtfAnalysis: MtfAnalysis;
@@ -175,7 +175,7 @@ function detectStructure(closes: number[], highs: number[], lows: number[]): Str
     description = "Higher High + Higher Low: struttura rialzista in progressione. Trade LONG in favore della struttura.";
   } else if (lowerHighs && lowerLows) {
     type = "Ribassista";
-    description = "Lower High + Lower Low: struttura ribassista in progressione. Trade SHORT in favore della struttura.";
+    description = "Lower High + Lower Low: struttura ribassista. Nessun ingresso LONG finché non c'è conferma.";
   } else if (higherHighs && lowerLows) {
     type = "Laterale";
     description = "Higher High + Lower Low: struttura espansiva (broadening). Segnale misto — cautela.";
@@ -208,13 +208,12 @@ function calcTimeframeTrend(values: OHLCRow[]): string {
   return "Neutrale";
 }
 
-function mtfScore(mtf: MtfAnalysis, direction: "LONG" | "SHORT" | "WAIT"): number {
+function mtfScore(mtf: MtfAnalysis, direction: "LONG" | "WAIT"): number {
   const tfValues = [mtf.m15, mtf.h1, mtf.h4, mtf.daily];
   if (direction === "WAIT") return 5;
   let aligned = 0;
   for (const tf of tfValues) {
     if (direction === "LONG" && tf.includes("Rialzista")) aligned++;
-    if (direction === "SHORT" && tf.includes("Ribassista")) aligned++;
   }
   // 4/4 aligned = 10, 3/4 = 8, 2/4 = 5, 1/4 = 2, 0/4 = 0
   return [0, 2, 5, 8, 10][aligned] ?? 0;
@@ -346,12 +345,12 @@ function buildFullReport(params: {
   volumeRatio: number;
   structure: Structure;
   mtf: MtfAnalysis;
-  direction: "LONG" | "SHORT" | "WAIT";
+  direction: "LONG" | "WAIT";
   verdict: "FORTE_BUY" | "BUY" | "NEUTRALE" | "SELL" | "FORTE_SELL";
   score: number;
   scoreBreakdown: ScoreBreakdown;
   confidenceScore: number;
-  estimatedProbability: number;
+  heuristicConfidence: number;
   tp: number;
   sl: number;
   falseSignalRisk: "Basso" | "Medio" | "Alto";
@@ -360,7 +359,7 @@ function buildFullReport(params: {
   const {
     ticker, price, ema50, ema100, ema200, rsi, macd, atr, atrAvg,
     volumeRatio, structure, mtf, direction, verdict, score, scoreBreakdown,
-    confidenceScore, estimatedProbability, tp, sl,
+    confidenceScore, heuristicConfidence, tp, sl,
     falseSignalRisk, invalidationConditions,
   } = params;
 
@@ -384,7 +383,7 @@ function buildFullReport(params: {
 
   const macdLabel = macd.histogram > 0 ? "Positivo (momentum rialzista)" : "Negativo (momentum ribassista)";
   const momentumClass =
-    (Math.abs(macd.histogram) > atr * 0.1 && ((direction === "LONG" && macd.histogram > 0) || (direction === "SHORT" && macd.histogram < 0)))
+    (Math.abs(macd.histogram) > atr * 0.1 && direction === "LONG" && macd.histogram > 0)
       ? "Momentum Forte"
       : Math.abs(rsi - 50) > 10
       ? "Momentum Moderato"
@@ -404,7 +403,6 @@ function buildFullReport(params: {
   // 4. VOLUMES
   const volLabel =
     volumeRatio > 1.3 && direction === "LONG" ? "Conferma Rialzista" :
-    volumeRatio > 1.3 && direction === "SHORT" ? "Conferma Ribassista" :
     volumeRatio < 0.7 ? "Nessuna Conferma (volumi bassi)" : "Volumi nella norma";
   const volPct = ((volumeRatio - 1) * 100).toFixed(0);
   const volDesc = volumeRatio >= 1
@@ -413,21 +411,16 @@ function buildFullReport(params: {
 
   // 5. MTF alignment count
   const tfList = [mtf.m15, mtf.h1, mtf.h4, mtf.daily];
-  const aligned = tfList.filter(tf =>
-    direction === "LONG" ? tf.includes("Rialzista") :
-    direction === "SHORT" ? tf.includes("Ribassista") : false
-  ).length;
+  const aligned = direction === "LONG"
+    ? tfList.filter(tf => tf.includes("Rialzista")).length
+    : 0;
   const mtfLabel = aligned >= 3 ? "Allineamento Multi-Timeframe: Forte" :
     aligned === 2 ? "Allineamento Multi-Timeframe: Parziale" :
     "Segnale controtrend nei timeframe superiori";
 
   // 7. R:R
-  const riskPct = direction === "LONG"
-    ? (((price - sl) / price) * 100).toFixed(2)
-    : (((sl - price) / price) * 100).toFixed(2);
-  const rewardPct = direction === "LONG"
-    ? (((tp - price) / price) * 100).toFixed(2)
-    : (((price - tp) / price) * 100).toFixed(2);
+  const riskPct = (((price - sl) / price) * 100).toFixed(2);
+  const rewardPct = (((tp - price) / price) * 100).toFixed(2);
   const rrRatio = Number(riskPct) > 0
     ? (Number(rewardPct) / Number(riskPct)).toFixed(2)
     : "N/D";
@@ -442,14 +435,12 @@ function buildFullReport(params: {
   if (price > ema200) posFactors.push("Prezzo sopra EMA200 — trend rialzista principale");
   else negFactors.push("Prezzo sotto EMA200 — trend ribassista principale");
   if (direction === "LONG" && rsi > 50 && rsi < 70) posFactors.push("RSI in zona momentum rialzista ottimale");
-  if (direction === "SHORT" && rsi < 50 && rsi > 30) posFactors.push("RSI in zona momentum ribassista");
   if (direction === "LONG" && macd.histogram > 0) posFactors.push("MACD positivo — conferma momentum");
-  if (direction === "SHORT" && macd.histogram < 0) posFactors.push("MACD negativo — conferma momentum");
   if (aligned >= 3) posFactors.push(`Multi-timeframe allineato (${aligned}/4)`);
   else negFactors.push(`Allineamento MTF parziale (${aligned}/4)`);
   if (volumeRatio > 1.2) posFactors.push(`Volumi superiori del ${volPct}% alla media`);
   else negFactors.push("Volumi nella norma o bassi");
-  if (structure.type === (direction === "LONG" ? "Rialzista" : "Ribassista")) posFactors.push("Struttura del prezzo in favore del trade");
+  if (direction === "LONG" && structure.type === "Rialzista") posFactors.push("Struttura del prezzo in favore del trade");
   else negFactors.push("Struttura del prezzo non allineata con la direzione");
   if (falseSignalRisk === "Alto") negFactors.push("Rischio di falso segnale elevato");
 
@@ -551,7 +542,7 @@ function buildFullReport(params: {
     confidenceScore >= 66 ? "Confidenza Alta" :
     confidenceScore >= 50 ? "Confidenza Moderata" : "Confidenza Bassa",
     ``,
-    `11. PROBABILITÀ STIMATA: ${estimatedProbability}%`,
+    `11. HEURISTIC CONFIDENCE: ${heuristicConfidence}%`,
     `Fattori positivi:`,
     ...posFactors.map(f => `  + ${f}`),
     `Fattori negativi:`,
@@ -565,7 +556,7 @@ function buildFullReport(params: {
     ``,
     `Score:                ${score}/100`,
     `Confidence Score:     ${confidenceScore}%`,
-    `Probabilita' stimata: ${estimatedProbability}%`,
+    `Heuristic confidence: ${heuristicConfidence}%`,
     ``,
     `Motivi principali:`,
     ...verdictReasons.map((r, i) => `  ${i + 1}. ${r}`),
@@ -643,39 +634,24 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
     // ─── DIRECTION & SCORING ──────────────────────────────────────────────────
 
     const trendRialzista = price > ema200;
-    const trendRibassista = price < ema200;
     const rsiOk_LONG = rsi > 40 && rsi < 70;
-    const rsiOk_SHORT = rsi > 30 && rsi < 60;
 
     const isLong = trendRialzista && rsiOk_LONG && macd.histogram >= 0;
-    const isShort = trendRibassista && rsiOk_SHORT && macd.histogram <= 0;
 
     // Trend score (0-30)
     let trendScore = 0;
     if (price > ema50) trendScore += 5;
     if (price > ema100) trendScore += 5;
     if (price > ema200) trendScore += 10;
-    if (ema50 > ema100 && ema100 > ema200) trendScore += 10; // perfect bull stack
-    else if (ema50 < ema100 && ema100 < ema200) trendScore += 10; // perfect bear stack — also high score
+    if (ema50 > ema100 && ema100 > ema200) trendScore += 10;
     else trendScore += 3; // mixed
-    if (price < ema50) {
-      // Rebalance for short
-      trendScore = 0;
-      if (price < ema50) trendScore += 5;
-      if (price < ema100) trendScore += 5;
-      if (price < ema200) trendScore += 10;
-      if (ema50 < ema100 && ema100 < ema200) trendScore += 10;
-      else trendScore += 3;
-    }
 
     // Momentum score (0-20)
     let momentumScore = 0;
-    const macdAligned = (isLong && macd.histogram > 0) || (isShort && macd.histogram < 0);
+    const macdAligned = isLong && macd.histogram > 0;
     if (macdAligned) momentumScore += 10;
     if (isLong && rsi > 50 && rsi < 70) momentumScore += 10;
-    else if (isShort && rsi < 50 && rsi > 30) momentumScore += 10;
     else if (isLong && rsi > 40) momentumScore += 5;
-    else if (isShort && rsi < 60) momentumScore += 5;
 
     // Volatility score (0-10)
     let volatilityScore = 0;
@@ -687,25 +663,20 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
 
     // Volume score (0-15)
     let volumeScore = 0;
-    const volAligned = (isLong && volumeRatio > 1.1) || (isShort && volumeRatio > 1.1);
+    const volAligned = isLong && volumeRatio > 1.1;
     if (volAligned) volumeScore = 15;
     else if (volumeRatio >= 0.9) volumeScore = 8;
     else volumeScore = 3;
 
     // Structure score (0-15)
     let structureScore = 0;
-    const structAligned =
-      (isLong && structure.type === "Rialzista") ||
-      (isShort && structure.type === "Ribassista");
-    const structContra =
-      (isLong && structure.type === "Ribassista") ||
-      (isShort && structure.type === "Rialzista");
+    const structAligned = isLong && structure.type === "Rialzista";
+    const structContra = isLong && structure.type === "Ribassista";
     if (structAligned) structureScore = 15;
     else if (structContra) structureScore = 0;
     else structureScore = 7;
 
-    const direction: "LONG" | "SHORT" | "WAIT" =
-      isLong ? "LONG" : isShort ? "SHORT" : "WAIT";
+    const direction: "LONG" | "WAIT" = isLong ? "LONG" : "WAIT";
 
     // MTF score (0-10)
     const mtfScoreVal = mtfScore(mtfAnalysis, direction);
@@ -728,27 +699,20 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
     const TP_MULT = 3.0;
 
     let tp: number, sl: number;
-    if (direction === "SHORT") {
-      tp = Math.round((price - TP_MULT * atr) * 1e6) / 1e6;
-      sl = Math.round((price + SL_MULT * atr) * 1e6) / 1e6;
-    } else {
-      tp = Math.round((price + TP_MULT * atr) * 1e6) / 1e6;
-      sl = Math.round((price - SL_MULT * atr) * 1e6) / 1e6;
-    }
+    tp = Math.round((price + TP_MULT * atr) * 1e6) / 1e6;
+    sl = Math.round((price - SL_MULT * atr) * 1e6) / 1e6;
 
     // ─── VERDICT ──────────────────────────────────────────────────────────────
 
     const verdict: AnalysisData["verdict"] =
       direction === "LONG" && score >= 85 ? "FORTE_BUY" :
-      direction === "LONG" && score >= 60 ? "BUY" :
-      direction === "SHORT" && score >= 85 ? "FORTE_SELL" :
-      direction === "SHORT" && score >= 60 ? "SELL" : "NEUTRALE";
+      direction === "LONG" && score >= 60 ? "BUY" : "NEUTRALE";
 
     // ─── CONFIDENCE & PROBABILITY ─────────────────────────────────────────────
 
     // Confluence: 6 factors (Trend, Momentum, Volume, Structure, MTF, Volatility)
-    const trendAligned = (direction === "LONG" && price > ema200) || (direction === "SHORT" && price < ema200);
-    const momentumAligned = (direction === "LONG" && rsi > 50 && rsi < 70) || (direction === "SHORT" && rsi < 50 && rsi > 30);
+    const trendAligned = direction === "LONG" && price > ema200;
+    const momentumAligned = direction === "LONG" && rsi > 50 && rsi < 70;
     const confluenceFactors = [
       trendAligned,
       macdAligned,
@@ -775,7 +739,7 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
       (mtfScoreVal / 10) * 10
     ));
 
-    const estimatedProbability = Math.min(90, Math.round(
+    const heuristicConfidence = Math.min(90, Math.round(
       confidenceScore * 0.8 + (score >= 76 ? 10 : score >= 61 ? 5 : 0)
     ));
 
@@ -801,11 +765,6 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
       invalidationConditions.push(`RSI supera 75 senza conferma di volume`);
       invalidationConditions.push(`Rottura ribassista dell'ultimo supporto (${fp(structure.lastSupport)})`);
       invalidationConditions.push(`MACD incrocia al ribasso la linea dello 0`);
-    } else if (direction === "SHORT") {
-      invalidationConditions.push(`Prezzo chiude sopra EMA200 (${fp(ema200)})`);
-      invalidationConditions.push(`RSI scende sotto 30 (ipervenduto — rimbalzo probabile)`);
-      invalidationConditions.push(`Rottura rialzista dell'ultima resistenza (${fp(structure.lastResistance)})`);
-      invalidationConditions.push(`MACD incrocia al rialzo la linea dello 0`);
     } else {
       invalidationConditions.push(`Allineamento delle EMA (50/100/200) in una direzione`);
       invalidationConditions.push(`RSI esce dal range 40-60 con volume > media`);
@@ -818,7 +777,7 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
       ticker, price, ema50, ema100, ema200, rsi, macd, atr,
       atrAvg, volumeRatio, structure, mtf: mtfAnalysis,
       direction, verdict, score, scoreBreakdown,
-      confidenceScore, estimatedProbability,
+      confidenceScore, heuristicConfidence,
       tp: signal === "BUY" ? tp : Math.round((price + TP_MULT * atr) * 1e6) / 1e6,
       sl: signal === "BUY" ? sl : Math.round((price - SL_MULT * atr) * 1e6) / 1e6,
       falseSignalRisk, invalidationConditions,
@@ -838,7 +797,7 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
       price,
       score,
       signal,
-      direction,
+      direction: direction === "LONG" ? "LONG" : "WAIT",
       verdict,
       reason,
       tp: signal === "BUY" ? tp : Math.round((price + TP_MULT * atr) * 1e6) / 1e6,
@@ -852,7 +811,7 @@ export async function analyzeTicker(ticker: string): Promise<AnalysisData | null
       volumeRatio,
       falseSignalRisk,
       confidenceScore,
-      estimatedProbability,
+      heuristicConfidence,
       scoreBreakdown,
       confluenceFactors: namedConfluenceFactors,
       mtfAnalysis,

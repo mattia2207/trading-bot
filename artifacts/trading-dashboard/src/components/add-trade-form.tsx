@@ -6,9 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useAddTrade,
   useSearchSymbols,
+  getSearchSymbolsQueryKey,
   getGetPortfolioQueryKey,
   getGetTradesQueryKey,
-  getGetTradesLiveQueryKey,
   getGetPortfolioSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
@@ -58,7 +58,12 @@ export function AddTradeForm({ investAmount }: { investAmount: number }) {
   const debouncedTerm = useDebounced(searchTerm, 350);
   const searchQuery = useSearchSymbols(
     { q: debouncedTerm },
-    { query: { enabled: debouncedTerm.trim().length >= 2 } }
+    {
+      query: {
+        queryKey: getSearchSymbolsQueryKey({ q: debouncedTerm }),
+        enabled: debouncedTerm.trim().length >= 2,
+      },
+    }
   );
 
   useEffect(() => {
@@ -85,7 +90,6 @@ export function AddTradeForm({ investAmount }: { investAmount: number }) {
           });
           queryClient.invalidateQueries({ queryKey: getGetPortfolioQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetTradesQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetTradesLiveQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetPortfolioSummaryQueryKey() });
           form.reset();
         }
@@ -217,7 +221,7 @@ export function AddTradeForm({ investAmount }: { investAmount: number }) {
             </div>
 
             {/* Key metrics row */}
-            {(result.confidenceScore != null || result.estimatedProbability != null) && (
+            {(result.confidenceScore != null || result.heuristicConfidence != null) && (
               <div className={`grid grid-cols-2 divide-x ${cfg.border} border-b ${cfg.border}`}>
                 <div className="px-4 py-2 text-center">
                   <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Confidence</p>
@@ -226,9 +230,9 @@ export function AddTradeForm({ investAmount }: { investAmount: number }) {
                   </p>
                 </div>
                 <div className="px-4 py-2 text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Probabilità</p>
+                   <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Heuristic confidence</p>
                   <p className={`font-mono text-base font-bold ${cfg.color}`}>
-                    {result.estimatedProbability ?? "—"}%
+                     {result.heuristicConfidence ?? "—"}%
                   </p>
                 </div>
               </div>

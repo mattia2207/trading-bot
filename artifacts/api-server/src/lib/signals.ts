@@ -1,83 +1,12 @@
 import { pool } from "@workspace/db";
 import { logger } from "./logger.js";
 
-// ─── SCHEMA INIT ─────────────────────────────────────────────────────────────
-
-export async function initSignalsSchema(): Promise<void> {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS signals (
-      id SERIAL PRIMARY KEY,
-      asset VARCHAR(20) NOT NULL,
-      timeframe VARCHAR(10) NOT NULL DEFAULT '1h',
-      direction VARCHAR(10) NOT NULL,
-      entry_price DECIMAL(20,8) NOT NULL,
-      tp DECIMAL(20,8),
-      sl DECIMAL(20,8),
-      score INTEGER NOT NULL DEFAULT 0,
-      confidence_score INTEGER NOT NULL DEFAULT 0,
-      estimated_probability INTEGER NOT NULL DEFAULT 0,
-      rsi DECIMAL(8,4),
-      macd_histogram DECIMAL(16,8),
-      ema50 DECIMAL(20,8),
-      ema100 DECIMAL(20,8),
-      ema200 DECIMAL(20,8),
-      atr DECIMAL(20,8),
-      volume_ratio DECIMAL(8,4),
-      trend VARCHAR(50),
-      momentum VARCHAR(50),
-      volatility VARCHAR(50),
-      confluence INTEGER NOT NULL DEFAULT 0,
-      market_regime VARCHAR(50),
-      verdict VARCHAR(20),
-      false_signal_risk VARCHAR(20),
-      status VARCHAR(10) NOT NULL DEFAULT 'PENDING',
-      qualified BOOLEAN NOT NULL DEFAULT false,
-      quality_tier VARCHAR(10),
-      exit_price DECIMAL(20,8),
-      profit_pct DECIMAL(10,4),
-      max_profit_pct DECIMAL(10,4),
-      max_drawdown_pct DECIMAL(10,4),
-      duration_minutes INTEGER,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      closed_at TIMESTAMPTZ
-    );
-    -- Extended columns (added after initial schema)
-    ALTER TABLE signals ADD COLUMN IF NOT EXISTS score_breakdown JSONB;
-    ALTER TABLE signals ADD COLUMN IF NOT EXISTS confluence_factors JSONB;
-    ALTER TABLE signals ADD COLUMN IF NOT EXISTS reason TEXT;
-
-    CREATE TABLE IF NOT EXISTS quality_filter_settings (
-      id INTEGER PRIMARY KEY DEFAULT 1,
-      min_score INTEGER NOT NULL DEFAULT 70,
-      min_confidence INTEGER NOT NULL DEFAULT 60,
-      min_confluence INTEGER NOT NULL DEFAULT 4,
-      CHECK (id = 1)
-    );
-    INSERT INTO quality_filter_settings (id, min_score, min_confidence, min_confluence)
-    VALUES (1, 70, 60, 4) ON CONFLICT (id) DO NOTHING;
-
-    -- Single-column indexes
-    CREATE INDEX IF NOT EXISTS idx_signals_asset      ON signals(asset);
-    CREATE INDEX IF NOT EXISTS idx_signals_status     ON signals(status);
-    CREATE INDEX IF NOT EXISTS idx_signals_created_at ON signals(created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_signals_score      ON signals(score);
-    CREATE INDEX IF NOT EXISTS idx_signals_qualified  ON signals(qualified);
-
-    -- Composite indexes for common query patterns
-    CREATE INDEX IF NOT EXISTS idx_signals_status_created ON signals(status, created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_signals_asset_status   ON signals(asset, status);
-    CREATE INDEX IF NOT EXISTS idx_signals_score_conf_dir ON signals(score, confidence_score, confluence, direction)
-      WHERE status IN ('WIN','LOSS');
-  `);
-  logger.info("[DB] Signals schema ready.");
-}
-
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 export interface SignalInsertData {
   asset: string; direction: string; entryPrice: number;
   tp: number; sl: number; score: number;
-  confidenceScore: number; estimatedProbability: number;
+  confidenceScore: number; heuristicConfidence: number;
   rsi: number; macdHistogram: number;
   ema50: number; ema100: number; ema200: number;
   atr: number; volumeRatio: number;
@@ -171,14 +100,14 @@ function rowToStat(label: string, r: {
 export async function insertSignal(data: SignalInsertData): Promise<number> {
   const res = await pool.query<{ id: number }>(
     `INSERT INTO signals (asset,direction,entry_price,tp,sl,score,confidence_score,
-      estimated_probability,rsi,macd_histogram,ema50,ema100,ema200,atr,volume_ratio,
+       estimated_probability,rsi,macd_histogram,ema50,ema100,ema200,atr,volume_ratio,
       trend,momentum,volatility,confluence,market_regime,verdict,false_signal_risk,
       qualified,quality_tier,score_breakdown,confluence_factors,reason)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
      RETURNING id`,
     [
       data.asset, data.direction, data.entryPrice, data.tp, data.sl,
-      data.score, data.confidenceScore, data.estimatedProbability,
+       data.score, data.confidenceScore, data.heuristicConfidence,
       data.rsi, data.macdHistogram, data.ema50, data.ema100, data.ema200,
       data.atr, data.volumeRatio, data.trend, data.momentum, data.volatility,
       data.confluence, data.marketRegime, data.verdict, data.falseSignalRisk,
@@ -243,7 +172,7 @@ export async function getSignalById(id: number): Promise<Record<string, unknown>
             ema200::FLOAT AS ema200,
             atr::FLOAT AS atr,
             volume_ratio::FLOAT AS volume_ratio,
-            estimated_probability,
+             estimated_probability AS heuristic_confidence,
             duration_minutes,
             score_breakdown,
             confluence_factors,
@@ -530,7 +459,7 @@ export async function listSignals(
        entry_price::FLOAT  AS entry_price,
        tp::FLOAT           AS tp,
        sl::FLOAT           AS sl,
-       score, confidence_score, estimated_probability,
+        score, confidence_score, estimated_probability AS heuristic_confidence,
        rsi::FLOAT          AS rsi,
        confluence, market_regime,
        verdict, false_signal_risk, status, qualified, quality_tier,

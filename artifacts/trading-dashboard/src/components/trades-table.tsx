@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useGetTradesLive,
+  useGetPositions,
   useDeleteTrade,
   getGetPortfolioQueryKey,
   getGetTradesQueryKey,
-  getGetTradesLiveQueryKey,
   getGetPortfolioSummaryQueryKey,
   getGetPortfolioMetricsQueryKey,
   getGetClosedTradesQueryKey,
@@ -46,10 +45,21 @@ function formatPnl(val: number): string {
 }
 
 export function TradesTable() {
-  const { data: trades, isLoading, dataUpdatedAt, refetch } = useGetTradesLive(
-    {},
-    { query: { refetchInterval: REFRESH_INTERVAL_MS } }
-  );
+  const { data: positions, isLoading, dataUpdatedAt, refetch } = useGetPositions({
+    query: { queryKey: ["platform-positions"], refetchInterval: REFRESH_INTERVAL_MS },
+  });
+  const trades = positions?.map((position) => ({
+    ticker: position.symbol,
+    direction: position.side,
+    investAmount: position.quantity * position.entryPrice,
+    entry: position.entryPrice,
+    tp: position.takeProfit,
+    sl: position.stopLoss,
+    reason: "Posizione persistita su PostgreSQL.",
+    currentPrice: null as number | null,
+    unrealizedPnl: null as number | null,
+    priceChangePercent: null as number | null,
+  })) ?? [];
   const deleteTrade = useDeleteTrade();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -83,7 +93,6 @@ export function TradesTable() {
         toast({ title: "Monitoraggio Interrotto", description: res.message });
         queryClient.invalidateQueries({ queryKey: getGetPortfolioQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetTradesQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetTradesLiveQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetPortfolioSummaryQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetPortfolioMetricsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetClosedTradesQueryKey() });
@@ -125,7 +134,7 @@ export function TradesTable() {
       <Card className="bg-card border-border rounded-sm shadow-none overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-            {trades.length} asset live
+            {trades.length} posizioni aperte
           </span>
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-muted-foreground font-mono">
@@ -152,8 +161,7 @@ export function TradesTable() {
                 <TableHead className="font-semibold text-xs uppercase tracking-wider text-right h-10">SL</TableHead>
                 <TableHead className="font-semibold text-xs uppercase tracking-wider text-right h-10">
                   <span className="flex items-center justify-end gap-1">
-                    Prezzo Live
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    Prezzo corrente
                   </span>
                 </TableHead>
                 <TableHead className="font-semibold text-xs uppercase tracking-wider text-right h-10">PnL Non Real.</TableHead>
@@ -172,11 +180,7 @@ export function TradesTable() {
                       {trade.ticker}
                     </TableCell>
                     <TableCell>
-                      {trade.direction === "SHORT" ? (
-                        <Badge variant="outline" className="text-red-500 border-red-500/30 bg-red-500/10 rounded-sm font-mono text-[10px] px-1.5 h-5">SHORT</Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 rounded-sm font-mono text-[10px] px-1.5 h-5">LONG</Badge>
-                      )}
+                      <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 rounded-sm font-mono text-[10px] px-1.5 h-5">LONG</Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm text-muted-foreground">
                       {trade.investAmount} €

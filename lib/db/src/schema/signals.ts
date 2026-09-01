@@ -1,5 +1,5 @@
 import {
-  pgTable, serial, varchar, integer, decimal, boolean, timestamp
+  pgTable, serial, varchar, integer, decimal, boolean, timestamp, jsonb, text
 } from "drizzle-orm/pg-core";
 
 export const signals = pgTable("signals", {
@@ -12,7 +12,7 @@ export const signals = pgTable("signals", {
   sl: decimal("sl", { precision: 20, scale: 8 }),
   score: integer("score").notNull().default(0),
   confidenceScore: integer("confidence_score").notNull().default(0),
-  estimatedProbability: integer("estimated_probability").notNull().default(0),
+  heuristicConfidence: integer("estimated_probability").notNull().default(0),
   rsi: decimal("rsi", { precision: 8, scale: 4 }),
   macdHistogram: decimal("macd_histogram", { precision: 16, scale: 8 }),
   ema50: decimal("ema50", { precision: 20, scale: 8 }),
@@ -35,6 +35,9 @@ export const signals = pgTable("signals", {
   maxProfitPct: decimal("max_profit_pct", { precision: 10, scale: 4 }),
   maxDrawdownPct: decimal("max_drawdown_pct", { precision: 10, scale: 4 }),
   durationMinutes: integer("duration_minutes"),
+  scoreBreakdown: jsonb("score_breakdown"),
+  confluenceFactors: jsonb("confluence_factors"),
+  reason: text("reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
 });

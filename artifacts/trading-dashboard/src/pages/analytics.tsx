@@ -174,7 +174,7 @@ function HeatmapChart({ type }: { type: "dow" | "hour" }) {
   });
 
   const arr = type === "dow"
-    ? (data?.byDow ?? []).map(d => ({ label: d.label, ...d }))
+    ? (data?.byDow ?? [])
     : (data?.byHour ?? []).map(d => ({ label: `${d.hour}h`, ...d }));
 
   if (!arr.length) return <Empty />;
@@ -326,7 +326,7 @@ export default function Analytics() {
           <ChartCard title="Quality Tier" icon={<BarChart2 className="w-3.5 h-3.5 text-amber-400" />}>
             <DistributionChart endpoint="tier" xKey="label" title="Tier" color={C.amber} />
           </ChartCard>
-          <ChartCard title="LONG vs SHORT" icon={<TrendingUp className="w-3.5 h-3.5 text-primary" />}>
+          <ChartCard title="LONG vs chiusure" icon={<TrendingUp className="w-3.5 h-3.5 text-primary" />}>
             <DirectionChart />
           </ChartCard>
         </div>

@@ -15,7 +15,7 @@ interface Signal {
   exit_price?: number; profit_pct?: number; max_profit_pct?: number;
   max_drawdown_pct?: number; rsi: number; macd_histogram: number;
   ema50: number; ema100: number; ema200: number; atr: number;
-  volume_ratio: number; estimated_probability: number;
+  volume_ratio: number; heuristic_confidence: number;
   duration_minutes?: number;
   score_breakdown?: { trend: number; momentum: number; volatility: number; volume: number; structure: number; multiTimeframe: number } | null;
   confluence_factors?: { trend: boolean; macd: boolean; volume: boolean; structure: boolean; mtf: boolean; momentum: boolean } | null;
@@ -140,7 +140,7 @@ export default function SignalDetail() {
           {[
             { label: "Score",        value: `${sig.score}/100`,              color: sig.score >= 85 ? "text-amber-400" : sig.score >= 75 ? "text-emerald-400" : "text-foreground" },
             { label: "Confidence",   value: `${sig.confidence_score}%`,      color: "text-foreground" },
-            { label: "Prob. stimata",value: `${sig.estimated_probability}%`, color: "text-foreground" },
+            { label: "Heuristic confidence",value: `${sig.heuristic_confidence}%`, color: "text-foreground" },
             { label: "R:R",          value: `1:${rr}`,                       color: "text-foreground" },
           ].map(s => (
             <div key={s.label} className="bg-card border border-border rounded-sm p-3 text-center">
@@ -272,7 +272,7 @@ export default function SignalDetail() {
             <ConfluenceFactor
               label="Struttura del Prezzo"
               active={cf?.structure ?? false}
-              description="Higher Highs + Higher Lows (LONG) o Lower Highs + Lower Lows (SHORT)"
+              description="Higher Highs + Higher Lows: la piattaforma opera solo in direzione LONG"
             />
             <ConfluenceFactor
               label="Multi-Timeframe (MTF)"

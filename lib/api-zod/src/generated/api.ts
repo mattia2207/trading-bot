@@ -17,6 +17,179 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Check database and execution readiness
+ */
+export const ReadinessCheckResponse = zod.object({
+  "status": zod.enum(['ready', 'not_ready']),
+  "database": zod.enum(['up', 'down']),
+  "executionMode": zod.enum(['paper', 'testnet']),
+  "testnetEnabled": zod.boolean(),
+  "dataAvailable": zod.boolean(),
+  "reason": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get safe runtime status
+ */
+export const GetPlatformStatusResponse = zod.object({
+  "executionMode": zod.enum(['paper', 'testnet']),
+  "testnetEnabled": zod.boolean(),
+  "testnetConfigured": zod.boolean(),
+  "killSwitchActive": zod.boolean(),
+  "apiStatus": zod.enum(['up', 'degraded', 'down']),
+  "websocketStatus": zod.enum(['connected', 'disconnected', 'unavailable']),
+  "databaseStatus": zod.enum(['up', 'down']),
+  "manualApprovalRequired": zod.boolean(),
+  "spotOnly": zod.boolean(),
+  "longOnly": zod.boolean()
+})
+
+
+/**
+ * @summary Get owner trading settings
+ */
+export const GetPlatformSettingsResponse = zod.object({
+  "riskPerTradePct": zod.number(),
+  "maxExposurePct": zod.number(),
+  "maxOpenPositions": zod.number(),
+  "maxDailyTrades": zod.number(),
+  "maxDailyLossPct": zod.number(),
+  "cooldownMinutes": zod.number(),
+  "minRewardRisk": zod.number(),
+  "paperStartingBalance": zod.number()
+})
+
+
+/**
+ * @summary Update safe trading settings
+ */
+export const updatePlatformSettingsBodyRiskPerTradePctMin = 0.01;
+export const updatePlatformSettingsBodyRiskPerTradePctMax = 1;
+
+export const updatePlatformSettingsBodyMaxExposurePctMin = 0.01;
+export const updatePlatformSettingsBodyMaxExposurePctMax = 100;
+
+export const updatePlatformSettingsBodyMaxOpenPositionsMax = 2;
+
+export const updatePlatformSettingsBodyMaxDailyTradesMax = 3;
+
+export const updatePlatformSettingsBodyMaxDailyLossPctMin = 0.01;
+export const updatePlatformSettingsBodyMaxDailyLossPctMax = 2;
+
+export const updatePlatformSettingsBodyCooldownMinutesMin = 0;
+export const updatePlatformSettingsBodyCooldownMinutesMax = 10080;
+
+export const updatePlatformSettingsBodyMinRewardRiskMin = 1.5;
+export const updatePlatformSettingsBodyMinRewardRiskMax = 20;
+
+export const updatePlatformSettingsBodyPaperStartingBalanceMin = 0;
+
+
+
+export const UpdatePlatformSettingsBody = zod.object({
+  "riskPerTradePct": zod.number().min(updatePlatformSettingsBodyRiskPerTradePctMin).max(updatePlatformSettingsBodyRiskPerTradePctMax).optional(),
+  "maxExposurePct": zod.number().min(updatePlatformSettingsBodyMaxExposurePctMin).max(updatePlatformSettingsBodyMaxExposurePctMax).optional(),
+  "maxOpenPositions": zod.number().min(1).max(updatePlatformSettingsBodyMaxOpenPositionsMax).optional(),
+  "maxDailyTrades": zod.number().min(1).max(updatePlatformSettingsBodyMaxDailyTradesMax).optional(),
+  "maxDailyLossPct": zod.number().min(updatePlatformSettingsBodyMaxDailyLossPctMin).max(updatePlatformSettingsBodyMaxDailyLossPctMax).optional(),
+  "cooldownMinutes": zod.number().min(updatePlatformSettingsBodyCooldownMinutesMin).max(updatePlatformSettingsBodyCooldownMinutesMax).optional(),
+  "minRewardRisk": zod.number().min(updatePlatformSettingsBodyMinRewardRiskMin).max(updatePlatformSettingsBodyMinRewardRiskMax).optional(),
+  "paperStartingBalance": zod.number().min(updatePlatformSettingsBodyPaperStartingBalanceMin).optional()
+})
+
+export const UpdatePlatformSettingsResponse = zod.object({
+  "riskPerTradePct": zod.number(),
+  "maxExposurePct": zod.number(),
+  "maxOpenPositions": zod.number(),
+  "maxDailyTrades": zod.number(),
+  "maxDailyLossPct": zod.number(),
+  "cooldownMinutes": zod.number(),
+  "minRewardRisk": zod.number(),
+  "paperStartingBalance": zod.number()
+})
+
+
+/**
+ * @summary Enable or disable the persistent kill switch
+ */
+export const UpdateKillSwitchBody = zod.object({
+  "active": zod.boolean(),
+  "reason": zod.string().nullish()
+})
+
+export const UpdateKillSwitchResponse = zod.object({
+  "active": zod.boolean(),
+  "reason": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List persisted spot positions
+ */
+export const GetPositionsResponseItem = zod.object({
+  "id": zod.number(),
+  "symbol": zod.string(),
+  "side": zod.enum(['LONG']),
+  "quantity": zod.number(),
+  "entryPrice": zod.number(),
+  "stopLoss": zod.number(),
+  "takeProfit": zod.number(),
+  "status": zod.enum(['OPEN', 'CLOSED']),
+  "unrealizedPnl": zod.number(),
+  "openedAt": zod.string()
+})
+export const GetPositionsResponse = zod.array(GetPositionsResponseItem)
+
+
+/**
+ * @summary List persisted orders
+ */
+export const GetOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "symbol": zod.string(),
+  "side": zod.enum(['BUY', 'SELL']),
+  "orderType": zod.enum(['MARKET', 'LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT']),
+  "status": zod.enum(['CREATED', 'SUBMITTED', 'ACKNOWLEDGED', 'PARTIALLY_FILLED', 'FILLED', 'CANCELED', 'REJECTED', 'UNKNOWN']),
+  "clientOrderId": zod.string(),
+  "quantity": zod.number(),
+  "price": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetOrdersResponse = zod.array(GetOrdersResponseItem)
+
+
+/**
+ * @summary List persisted fills
+ */
+export const GetFillsResponseItem = zod.object({
+  "id": zod.number(),
+  "orderId": zod.number(),
+  "symbol": zod.string(),
+  "quantity": zod.number(),
+  "price": zod.number(),
+  "fee": zod.number(),
+  "feeAsset": zod.string(),
+  "filledAt": zod.string()
+})
+export const GetFillsResponse = zod.array(GetFillsResponseItem)
+
+
+/**
+ * @summary List safe audit events
+ */
+export const GetAuditEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "eventType": zod.string(),
+  "symbol": zod.string().nullish(),
+  "detail": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetAuditEventsResponse = zod.array(GetAuditEventsResponseItem)
+
+
+/**
  * @summary Get portfolio
  */
 export const GetPortfolioResponse = zod.object({
@@ -28,7 +201,7 @@ export const GetPortfolioResponse = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -40,7 +213,7 @@ export const GetPortfolioResponse = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -69,7 +242,7 @@ export const UpdatePortfolioResponse = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -81,7 +254,7 @@ export const UpdatePortfolioResponse = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -127,7 +300,7 @@ export const GetTradesResponseItem = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -152,7 +325,7 @@ export const AddTradeResponse = zod.object({
   "score": zod.number().nullish(),
   "verdict": zod.string().nullish(),
   "confidenceScore": zod.number().nullish(),
-  "estimatedProbability": zod.number().nullish(),
+  "heuristicConfidence": zod.number().nullish(),
   "reason": zod.string().nullish(),
   "trade": zod.object({
   "ticker": zod.string(),
@@ -160,7 +333,7 @@ export const AddTradeResponse = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -178,7 +351,7 @@ export const GetClosedTradesResponseItem = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -188,26 +361,6 @@ export const GetClosedTradesResponseItem = zod.object({
   "pnl": zod.number()
 })
 export const GetClosedTradesResponse = zod.array(GetClosedTradesResponseItem)
-
-
-/**
- * @summary Get open trades with live price and unrealized PnL
- */
-export const GetTradesLiveResponseItem = zod.object({
-  "ticker": zod.string(),
-  "direction": zod.enum(['LONG', 'SHORT']),
-  "entry": zod.number(),
-  "tp": zod.number(),
-  "sl": zod.number(),
-  "atr": zod.number(),
-  "reason": zod.string(),
-  "investAmount": zod.number(),
-  "addedAt": zod.string(),
-  "currentPrice": zod.number().nullable(),
-  "unrealizedPnl": zod.number().nullable(),
-  "priceChangePercent": zod.number().nullable()
-})
-export const GetTradesLiveResponse = zod.array(GetTradesLiveResponseItem)
 
 
 /**
@@ -240,7 +393,7 @@ export const UpdateTradeStatusResponse = zod.object({
   "tp": zod.number(),
   "sl": zod.number(),
   "atr": zod.number(),
-  "direction": zod.enum(['LONG', 'SHORT']),
+  "direction": zod.enum(['LONG']),
   "reason": zod.string(),
   "investAmount": zod.number(),
   "addedAt": zod.string(),
@@ -282,8 +435,8 @@ export const AnalyzeTickerResponse = zod.object({
   "price": zod.number(),
   "score": zod.number(),
   "signal": zod.string(),
-  "direction": zod.enum(['LONG', 'SHORT', 'WAIT']),
-  "verdict": zod.enum(['FORTE_BUY', 'BUY', 'NEUTRALE', 'SELL', 'FORTE_SELL']),
+  "direction": zod.enum(['LONG', 'WAIT']),
+  "verdict": zod.enum(['FORTE_BUY', 'BUY', 'NEUTRALE']),
   "reason": zod.string(),
   "tp": zod.number(),
   "sl": zod.number(),
@@ -296,7 +449,7 @@ export const AnalyzeTickerResponse = zod.object({
   "volumeRatio": zod.number(),
   "falseSignalRisk": zod.enum(['Basso', 'Medio', 'Alto']),
   "confidenceScore": zod.number(),
-  "estimatedProbability": zod.number(),
+  "heuristicConfidence": zod.number(),
   "scoreBreakdown": zod.object({
   "trend": zod.number(),
   "momentum": zod.number(),
@@ -312,6 +465,112 @@ export const AnalyzeTickerResponse = zod.object({
   "daily": zod.string()
 }),
   "invalidationConditions": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Analyze a ticker without persisting a signal
+ */
+export const PreviewAnalysisParams = zod.object({
+  "ticker": zod.coerce.string()
+})
+
+export const PreviewAnalysisResponse = zod.object({
+  "ticker": zod.string(),
+  "price": zod.number(),
+  "score": zod.number(),
+  "signal": zod.string(),
+  "direction": zod.enum(['LONG', 'WAIT']),
+  "verdict": zod.enum(['FORTE_BUY', 'BUY', 'NEUTRALE']),
+  "reason": zod.string(),
+  "tp": zod.number(),
+  "sl": zod.number(),
+  "atr": zod.number(),
+  "ema50": zod.number(),
+  "ema100": zod.number(),
+  "ema200": zod.number(),
+  "rsi": zod.number(),
+  "macdHistogram": zod.number(),
+  "volumeRatio": zod.number(),
+  "falseSignalRisk": zod.enum(['Basso', 'Medio', 'Alto']),
+  "confidenceScore": zod.number(),
+  "heuristicConfidence": zod.number(),
+  "scoreBreakdown": zod.object({
+  "trend": zod.number(),
+  "momentum": zod.number(),
+  "volatility": zod.number(),
+  "volume": zod.number(),
+  "structure": zod.number(),
+  "multiTimeframe": zod.number()
+}),
+  "mtfAnalysis": zod.object({
+  "m15": zod.string(),
+  "h1": zod.string(),
+  "h4": zod.string(),
+  "daily": zod.string()
+}),
+  "invalidationConditions": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Manually approve a qualified LONG signal for execution
+ */
+export const ApproveSignalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ApproveSignalResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string(),
+  "order": zod.object({
+  "id": zod.number(),
+  "symbol": zod.string(),
+  "side": zod.enum(['BUY', 'SELL']),
+  "orderType": zod.enum(['MARKET', 'LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT']),
+  "status": zod.enum(['CREATED', 'SUBMITTED', 'ACKNOWLEDGED', 'PARTIALLY_FILLED', 'FILLED', 'CANCELED', 'REJECTED', 'UNKNOWN']),
+  "clientOrderId": zod.string(),
+  "quantity": zod.number(),
+  "price": zod.number().nullish(),
+  "createdAt": zod.string()
+}).nullish()
+})
+
+
+/**
+ * @summary Run a reproducible closed-candle backtest
+ */
+export const runBacktestBodyFeePctMin = 0;
+
+export const runBacktestBodySlippagePctMin = 0;
+
+
+
+export const RunBacktestBody = zod.object({
+  "symbol": zod.string(),
+  "interval": zod.enum(['1h']),
+  "candles": zod.array(zod.object({
+  "openTime": zod.string(),
+  "open": zod.number(),
+  "high": zod.number(),
+  "low": zod.number(),
+  "close": zod.number(),
+  "volume": zod.number()
+})),
+  "feePct": zod.number().min(runBacktestBodyFeePctMin).optional(),
+  "slippagePct": zod.number().min(runBacktestBodySlippagePctMin).optional()
+})
+
+export const RunBacktestResponse = zod.object({
+  "symbol": zod.string(),
+  "trades": zod.number(),
+  "outOfSampleTrades": zod.number(),
+  "walkForwardWindows": zod.number(),
+  "winRate": zod.number(),
+  "profitFactor": zod.number(),
+  "expectancy": zod.number(),
+  "maxDrawdown": zod.number(),
+  "equityCurve": zod.array(zod.number())
 })
 
 
